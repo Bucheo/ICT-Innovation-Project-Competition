@@ -1,0 +1,33 @@
+{
+  "name": "academicconference",
+  "version": "1.0.0",
+  "description": "Academic Conference DB & Server Project",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "db:migrate": "node scripts/db-migrate.js",
+    "make:admin": "node scripts/make-admin.js",
+    "db:check": "node scripts/db-check.js",
+    "ai": "node start-ai-server.js",
+    "ai:install": "pip install -r requirements.txt || pip3 install -r requirements.txt",
+    "start:all": "concurrently \"npm run ai\" \"npm start\"",
+    "install:all": "npm install && npm run ai:install"
+  },
+  "keywords": [],
+  "author": "김준영",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.1",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.34.4",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.0"
+  }
+}

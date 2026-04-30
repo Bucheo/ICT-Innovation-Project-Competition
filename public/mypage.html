@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>마이페이지</title>
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bd: #e6e6e8;
+        --text: #111;
+        --muted: #666;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        --radius: 16px;
+      }
+      body {
+        margin: 0;
+        font: 14px/1.6 Pretendard, system-ui, -apple-system, Segoe UI, Roboto,
+          Noto Sans KR;
+        color: var(--text);
+        background: #f7f7f8;
+      }
+      .wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 18px;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .btn {
+        line-height: 1;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid var(--bd);
+        background: #fff;
+        border-radius: 12px;
+        padding: 8px 12px;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+      }
+      h2 {
+        margin: 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+      }
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+      }
+      .thumb {
+        aspect-ratio: 1.3/1;
+        background: #e9e9ee;
+        background-size: cover;
+        background-position: center;
+      }
+      .meta {
+        padding: 10px;
+        text-align: left;
+      }
+      .meta_wrapper {
+        height: 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 700;
+        text-align: left;
+      }
+      .sub {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3; /* 보여줄 줄 수 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal; /* 기존 nowrap 무효화 */
+
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 2px;
+        text-align: left;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        padding: 10px;
+      }
+      .actions .btn {
+        cursor: pointer;
+      }
+
+      /* 모달 */
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        place-items: center;
+        background: rgba(17, 17, 17, 0.6);
+        backdrop-filter: blur(3px);
+        z-index: 100;
+      }
+      .modal.open {
+        display: grid;
+      }
+      .dialog {
+        width: min(1000px, 92vw);
+        background: #000;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: #111;
+        color: #eee;
+      }
+      .dialog-body {
+        aspect-ratio: 16/9;
+        background: #000;
+      }
+      .dialog-body iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .dialog-close {
+        background: transparent;
+        border: 0;
+        color: #ddd;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      /* 토스트 */
+      #toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translate(-50%, -10px);
+        background: rgba(17, 17, 17, 0.9);
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-align: center;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s, transform 0.3s;
+        z-index: 9999;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <h2>마이페이지</h2>
+        <div>
+          <a class="btn" href="/"><i class="bx bx-home"></i>메인</a>
+          <button id="btnLogout" class="btn" type="button">
+            <i class="bx bx-log-out"></i>로그아웃
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: 8px; color: #666">
+        북마크한 모델 <b id="cnt">0</b>개
+      </div>
+      <div class="grid" id="list"></div>
+    </div>
+
+    <!-- 미리보기 모달 -->
+    <div class="modal" id="modal">
+      <div class="dialog">
+        <div class="dialog-header">
+          <div id="modalTitle">미리보기</div>
+          <button class="dialog-close" id="btnClose" aria-label="닫기">
+            ✕
+          </button>
+        </div>
+        <div class="dialog-body">
+          <iframe
+            id="viewer"
+            allow="autoplay; fullscreen; xr-spatial-tracking"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- 토스트 -->
+    <div id="toast"></div>
+
+    <script>
+      const qs = (s) => document.querySelector(s);
+      const qsa = (s) => [...document.querySelectorAll(s)];
+
+      function showToast(msg, bg = "#16a34a") {
+        const t = document.getElementById("toast");
+        if (!t) return;
+        t.textContent = msg;
+        t.style.background = bg;
+        t.style.opacity = "1";
+        t.style.transform = "translate(-50%,0)";
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => {
+          t.style.opacity = "0";
+          t.style.transform = "translate(-50%,-10px)";
+        }, 1800);
+      }
+
+      async function api(path, method = "GET", body) {
+        const res = await fetch(path, {
+          method,
+          headers:
+            body instanceof FormData
+              ? undefined
+              : { "Content-Type": "application/json" },
+          credentials: "include",
+          body: body
+            ? body instanceof FormData
+              ? body
+              : JSON.stringify(body)
+            : undefined,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+          throw Object.assign(new Error(data.error || "요청 실패"), {
+            status: res.status,
+            data,
+          });
+        return data;
+      }
+
+      // Sketchfab 임베드 변환
+      function toEmbed(url) {
+        try {
+          const last = url.split("/").pop();
+          const uid = (last || "").split("-").pop();
+          return `https://sketchfab.com/models/${uid}/embed?ui_theme=dark`;
+        } catch (e) {
+          return url;
+        }
+      }
+
+      function openModal(title, url) {
+        const modal = qs("#modal");
+        const iframe = qs("#viewer");
+        qs("#modalTitle").textContent = title || "미리보기";
+        iframe.src = toEmbed(url);
+        modal.classList.add("open");
+        document.body.classList.add("no-scroll");
+      }
+      function closeModal() {
+        const modal = qs("#modal");
+        const iframe = qs("#viewer");
+        modal.classList.remove("open");
+        document.body.classList.remove("no-scroll");
+        iframe.src = "";
+      }
+
+      qs("#btnClose").addEventListener("click", closeModal);
+      qs("#modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeModal();
+      });
+      document.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key === "Escape") closeModal();
+        },
+        true
+      );
+
+      function render(items) {
+        qs("#cnt").textContent = items.length;
+        qs("#list").innerHTML = items
+          .map((m) => {
+            const bg = m.thumb
+              ? `style="background-image:url('${String(m.thumb).replace(
+                  /'/g,
+                  "%27"
+                )}')"`
+              : "";
+            return `
+          <article class="card" data-id="${m.id}" data-title="${
+              m.title
+            }" data-url="${m.url}">
+            <div class="thumb" ${bg}></div>
+            <div class="meta_wrapper">
+              <div class="meta">
+                <div class="title">${m.title}</div>
+                <div class="sub">${m.description || ""}</div>
+              </div>
+              <div class="actions">
+                <button class="btn btn-remove" type="button"><i class='bx bx-bookmark-x'></i>해제</button>
+              </div>
+            </div>
+          </article>`;
+          })
+          .join("");
+
+        qsa(".btn-remove").forEach((b) => {
+          b.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const id = b.closest(".card")?.dataset?.id;
+            if (!id) return;
+            try {
+              await api(`/api/bookmarks/${id}`, "DELETE");
+              b.closest(".card").remove();
+              const left = document.querySelectorAll(".card").length;
+              qs("#cnt").textContent = left;
+              showToast("북마크가 해제되었습니다", "#dc2626");
+            } catch (err) {
+              alert("해제 실패: " + (err.message || "ERR"));
+            }
+          });
+        });
+
+        // ✅ 카드 클릭 시 팝업 열기
+        qsa(".card").forEach((c) => {
+          c.addEventListener("click", (e) => {
+            if (e.target.closest(".actions")) return;
+            openModal(c.dataset.title, c.dataset.url);
+          });
+        });
+      }
+
+      async function load() {
+        try {
+          const me = await api("/api/auth/whoami");
+          if (!me?.user || me.user.role === "admin") {
+            location.href = "/";
+            return;
+          }
+        } catch {
+          location.href = "/";
+          return;
+        }
+
+        try {
+          const r = await api("/api/bookmarks?expand=1");
+          const items = r.items || [];
+          render(items);
+        } catch (err) {
+          console.warn(err);
+          qs(
+            "#list"
+          ).innerHTML = `<div style="grid-column:1/-1;color:#a00">불러오기 실패</div>`;
+        }
+      }
+
+      qs("#btnLogout").addEventListener("click", async () => {
+        try {
+          await api("/api/auth/logout", "POST");
+        } catch {}
+        location.href = "/";
+      });
+
+      load();
+    </script>
+  </body>
+</html>

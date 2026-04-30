@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>교사용 학습 대시보드</title>
+        <style>
+            :root {
+                --red: #bc2c3c;
+                --blue: #4e77ba;
+                --green: #2f9e73;
+                --ink: #16181d;
+                --muted: #697181;
+                --line: #e1e6ef;
+                --soft: #f4f7fb;
+                --panel: #fff;
+                --shadow: 0 10px 28px rgba(21, 31, 48, 0.1);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                background: #f6f8fb;
+                color: var(--ink);
+                font: 14px/1.55 Pretendard, system-ui, -apple-system, Segoe UI,
+                    Roboto, Noto Sans KR, sans-serif;
+            }
+
+            header {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                border-bottom: 1px solid var(--line);
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(12px);
+            }
+
+            .nav,
+            main {
+                max-width: 1240px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+
+            .nav {
+                height: 64px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+            }
+
+            .brand-mark {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, var(--red), var(--blue));
+                box-shadow: 0 8px 18px rgba(78, 119, 186, 0.24);
+            }
+
+            h1 {
+                margin: 0;
+                font-size: 1.08rem;
+            }
+
+            .sub {
+                color: var(--muted);
+                font-size: 0.82rem;
+            }
+
+            .nav a {
+                color: var(--blue);
+                text-decoration: none;
+                font-weight: 700;
+            }
+
+            main {
+                padding-top: 22px;
+                padding-bottom: 32px;
+            }
+
+            .summary {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .metric,
+            .panel {
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                box-shadow: var(--shadow);
+            }
+
+            .metric {
+                padding: 16px;
+                min-height: 104px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .metric .label {
+                color: var(--muted);
+                font-weight: 700;
+            }
+
+            .metric .value {
+                font-size: 2rem;
+                font-weight: 800;
+                letter-spacing: 0;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+                gap: 16px;
+            }
+
+            .stack {
+                display: grid;
+                gap: 16px;
+            }
+
+            .panel-head {
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--line);
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .panel-title {
+                margin: 0;
+                font-size: 0.98rem;
+            }
+
+            .panel-body {
+                padding: 16px;
+            }
+
+            .chart-wrap {
+                height: 260px;
+                padding: 6px 12px 8px;
+            }
+
+            canvas {
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
+
+            .bar-list,
+            .plain-list {
+                display: grid;
+                gap: 10px;
+            }
+
+            .bar-row {
+                display: grid;
+                grid-template-columns: 100px minmax(0, 1fr) 44px;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .bar-label,
+            .item-title {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-weight: 700;
+            }
+
+            .bar-track {
+                height: 10px;
+                border-radius: 999px;
+                background: #edf1f7;
+                overflow: hidden;
+            }
+
+            .bar-fill {
+                height: 100%;
+                border-radius: inherit;
+                background: linear-gradient(90deg, var(--green), var(--blue));
+            }
+
+            .bar-value,
+            .tag {
+                color: var(--muted);
+                font-size: 0.82rem;
+                font-weight: 700;
+            }
+
+            .item {
+                padding: 12px;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                background: var(--soft);
+            }
+
+            .item-meta {
+                margin-top: 4px;
+                display: flex;
+                gap: 8px;
+                color: var(--muted);
+                font-size: 0.82rem;
+            }
+
+            .concepts {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 7px 10px;
+                border-radius: 999px;
+                background: #eef4ff;
+                color: #315c9f;
+                font-weight: 700;
+            }
+
+            .chip strong {
+                color: var(--red);
+            }
+
+            .empty {
+                padding: 22px;
+                text-align: center;
+                color: var(--muted);
+                border: 1px dashed #cad2df;
+                border-radius: 8px;
+                background: #fafcff;
+            }
+
+            @media (max-width: 920px) {
+                .summary,
+                .grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .grid {
+                    display: grid;
+                }
+            }
+
+            @media (max-width: 640px) {
+                .summary,
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .nav,
+                main {
+                    padding-left: 14px;
+                    padding-right: 14px;
+                }
+
+                .bar-row {
+                    grid-template-columns: 82px minmax(0, 1fr) 36px;
+                }
+
+                .chart-wrap {
+                    height: 220px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="nav">
+                <div class="brand">
+                    <div class="brand-mark"></div>
+                    <div>
+                        <h1>교사용 학습 대시보드</h1>
+                        <div class="sub">질문, 북마크, 노트 기반 학습 흐름</div>
+                    </div>
+                </div>
+                <a href="/">메인으로</a>
+            </div>
+        </header>
+
+        <main>
+            <section class="summary" id="summary"></section>
+
+            <section class="grid">
+                <div class="stack">
+                    <article class="panel">
+                        <div class="panel-head">
+                            <h2 class="panel-title">최근 질문 흐름</h2>
+                            <span class="tag">14일</span>
+                        </div>
+                        <div class="panel-body chart-wrap">
+                            <canvas id="questionChart"></canvas>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-head">
+                            <h2 class="panel-title">단원 체류 관심도</h2>
+                            <span class="tag">질문·북마크·노트</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="bar-list" id="unitFocus"></div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="stack">
+                    <article class="panel">
+                        <div class="panel-head">
+                            <h2 class="panel-title">많이 나온 개념 질문</h2>
+                        </div>
+                        <div class="panel-body">
+                            <div class="concepts" id="concepts"></div>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-head">
+                            <h2 class="panel-title">북마크가 많은 주제</h2>
+                        </div>
+                        <div class="panel-body">
+                            <div class="plain-list" id="bookmarks"></div>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-head">
+                            <h2 class="panel-title">최근 질문</h2>
+                        </div>
+                        <div class="panel-body">
+                            <div class="plain-list" id="recentQuestions"></div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            const qs = (selector) => document.querySelector(selector);
+
+            function escapeHtml(value) {
+                return String(value ?? '').replace(
+                    /[&<>"']/g,
+                    (char) =>
+                        ({
+                            '&': '&amp;',
+                            '<': '&lt;',
+                            '>': '&gt;',
+                            '"': '&quot;',
+                            "'": '&#039;',
+                        }[char])
+                );
+            }
+
+            function renderSummary(summary) {
+                const items = [
+                    ['등록 모델', summary.models],
+                    ['누적 질문', summary.questions],
+                    ['북마크', summary.bookmarks],
+                    ['저장 노트', summary.notes],
+                ];
+                qs('#summary').innerHTML = items
+                    .map(
+                        ([label, value]) => `
+                        <div class="metric">
+                            <div class="label">${label}</div>
+                            <div class="value">${Number(value || 0).toLocaleString(
+                                'ko-KR'
+                            )}</div>
+                        </div>`
+                    )
+                    .join('');
+            }
+
+            function renderBars(target, rows, valueKey) {
+                const el = qs(target);
+                const max = Math.max(...rows.map((row) => row[valueKey]), 1);
+                if (!rows.length) {
+                    el.innerHTML = '<div class="empty">아직 집계된 데이터가 없습니다.</div>';
+                    return;
+                }
+                el.innerHTML = rows
+                    .map((row) => {
+                        const value = Number(row[valueKey] || 0);
+                        const width = Math.max(6, Math.round((value / max) * 100));
+                        return `
+                        <div class="bar-row">
+                            <div class="bar-label">${escapeHtml(row.label)}</div>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="width:${width}%"></div>
+                            </div>
+                            <div class="bar-value">${value}</div>
+                        </div>`;
+                    })
+                    .join('');
+            }
+
+            function renderConcepts(items) {
+                const el = qs('#concepts');
+                if (!items.length) {
+                    el.innerHTML = '<div class="empty">챗봇 질문이 쌓이면 표시됩니다.</div>';
+                    return;
+                }
+                el.innerHTML = items
+                    .map(
+                        (item) =>
+                            `<span class="chip">${escapeHtml(
+                                item.name
+                            )} <strong>${item.count}</strong></span>`
+                    )
+                    .join('');
+            }
+
+            function renderBookmarks(items) {
+                const el = qs('#bookmarks');
+                if (!items.length) {
+                    el.innerHTML = '<div class="empty">아직 북마크 데이터가 없습니다.</div>';
+                    return;
+                }
+                el.innerHTML = items
+                    .map(
+                        (item) => `
+                        <div class="item">
+                            <div class="item-title">${escapeHtml(item.title)}</div>
+                            <div class="item-meta">
+                                <span>${escapeHtml(item.subjectLabel)}</span>
+                                <span>${item.count}회</span>
+                            </div>
+                        </div>`
+                    )
+                    .join('');
+            }
+
+            function renderRecentQuestions(items) {
+                const el = qs('#recentQuestions');
+                if (!items.length) {
+                    el.innerHTML = '<div class="empty">최근 질문이 없습니다.</div>';
+                    return;
+                }
+                el.innerHTML = items
+                    .map(
+                        (item) => `
+                        <div class="item">
+                            <div class="item-title">${escapeHtml(item.message)}</div>
+                            <div class="item-meta">
+                                <span>${escapeHtml(item.subjectLabel)}</span>
+                                <span>${item.withQuiz ? '퀴즈' : '질문'}</span>
+                            </div>
+                        </div>`
+                    )
+                    .join('');
+            }
+
+            function drawLineChart(canvas, rows) {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+                canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+                const ctx = canvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+                ctx.clearRect(0, 0, rect.width, rect.height);
+
+                const pad = { top: 8, right: 16, bottom: 24, left: 34 };
+                const width = rect.width - pad.left - pad.right;
+                const height = rect.height - pad.top - pad.bottom;
+                const max = Math.max(...rows.map((row) => row.count), 4);
+
+                ctx.strokeStyle = '#dde4ef';
+                ctx.lineWidth = 1;
+                ctx.fillStyle = '#697181';
+                ctx.font = '12px system-ui';
+                ctx.textAlign = 'right';
+
+                for (let i = 0; i <= 4; i++) {
+                    const y = pad.top + (height / 4) * i;
+                    const value = Math.round(max - (max / 4) * i);
+                    ctx.beginPath();
+                    ctx.moveTo(pad.left, y);
+                    ctx.lineTo(pad.left + width, y);
+                    ctx.stroke();
+                    ctx.fillText(value, pad.left - 8, y + 4);
+                }
+
+                const points = rows.map((row, index) => {
+                    const x =
+                        pad.left +
+                        (rows.length === 1 ? width : (width / (rows.length - 1)) * index);
+                    const y = pad.top + height - (row.count / max) * height;
+                    return { x, y, row };
+                });
+
+                const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + height);
+                gradient.addColorStop(0, 'rgba(78,119,186,0.24)');
+                gradient.addColorStop(1, 'rgba(78,119,186,0)');
+
+                ctx.beginPath();
+                points.forEach((point, index) => {
+                    if (index === 0) ctx.moveTo(point.x, point.y);
+                    else ctx.lineTo(point.x, point.y);
+                });
+                ctx.lineTo(points[points.length - 1].x, pad.top + height);
+                ctx.lineTo(points[0].x, pad.top + height);
+                ctx.closePath();
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                ctx.beginPath();
+                points.forEach((point, index) => {
+                    if (index === 0) ctx.moveTo(point.x, point.y);
+                    else ctx.lineTo(point.x, point.y);
+                });
+                ctx.strokeStyle = '#4e77ba';
+                ctx.lineWidth = 3;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                ctx.fillStyle = '#bc2c3c';
+                for (const point of points) {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#697181';
+                ctx.textAlign = 'center';
+                const labelIndexes = new Set([0, Math.floor(rows.length / 2), rows.length - 1]);
+                points.forEach((point, index) => {
+                    if (!labelIndexes.has(index)) return;
+                    const label = point.row.day.slice(5).replace('-', '.');
+                    ctx.fillText(label, point.x, pad.top + height + 24);
+                });
+            }
+
+            async function loadDashboard() {
+                const res = await fetch('/api/teacher/dashboard');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || '대시보드 로드 실패');
+
+                renderSummary(data.summary);
+                drawLineChart(qs('#questionChart'), data.questionTrend);
+                renderBars('#unitFocus', data.unitFocus, 'engagement');
+                renderConcepts(data.conceptQuestions);
+                renderBookmarks(data.popularBookmarks);
+                renderRecentQuestions(data.recentQuestions);
+
+                window.addEventListener('resize', () =>
+                    drawLineChart(qs('#questionChart'), data.questionTrend)
+                );
+            }
+
+            loadDashboard().catch((err) => {
+                document.body.innerHTML = `<main><div class="empty">${escapeHtml(
+                    err.message
+                )}</div></main>`;
+            });
+        </script>
+    </body>
+</html>

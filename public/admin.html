@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 | 교육용 모델 카탈로그</title>
+    <link
+      href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bd: #e6e6e8;
+        --ring: #4e77ba;
+        --danger: #e63946;
+        --ok: #16a34a;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font: 14px/1.6 Pretendard, system-ui, -apple-system, Segoe UI, Roboto,
+          Noto Sans KR;
+        background: #f7f7f8;
+        color: #111;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 960px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+      h1 {
+        margin: 0 0 12px 0;
+      }
+      .muted {
+        color: #666;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--bd);
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, #bc2c3c, #4e77ba);
+        color: #fff;
+        border: none;
+      }
+      .btn.danger {
+        border-color: #ffb4b9;
+        background: #ffe7e9;
+        color: #b2081b;
+      }
+      .btn:hover {
+        filter: brightness(0.98);
+      }
+      .section {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--bd);
+        font-weight: 700;
+      }
+      .body {
+        padding: 16px;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .label {
+        font-weight: 600;
+      }
+      input[type="text"],
+      input[type="url"],
+      input[type="password"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        outline: none;
+        font: inherit;
+        background: #fff;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+      @media (max-width: 1200px) {
+        .grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .item {
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        position: relative;
+      }
+      .thumb {
+        aspect-ratio: 1.2/1;
+        background: #e9e9ee;
+        background-size: cover;
+        background-position: center;
+      }
+      .meta {
+        padding: 10px;
+      }
+      .title {
+        font-weight: 700;
+      }
+      .sub {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      .item .del {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #fff;
+        border: 1px solid var(--bd);
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+      }
+      .item[draggable="true"] {
+        cursor: grab;
+      }
+      .item.dragging {
+        opacity: 0.6;
+        transform: scale(0.98);
+      }
+      .item.drag-over-before {
+        outline: 2px dashed var(--ring);
+        outline-offset: -8px;
+      }
+      .item.drag-over-after {
+        outline: 2px dashed var(--ring);
+        outline-offset: -8px;
+      }
+
+      /* 로그인 박스 */
+      .loginbox {
+        max-width: 420px;
+        margin: 10vh auto;
+        padding: 20px;
+      }
+      .center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .err {
+        color: #b2081b;
+        margin-top: 6px;
+      }
+      .ok {
+        color: #0f7b2d;
+        margin-top: 6px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- 상단 -->
+      <div class="topbar">
+        <h1>관리자 페이지</h1>
+        <div>
+          <button class="btn" id="btnToHome" onclick="location.href='/'">
+            메인으로
+          </button>
+          <button class="btn" id="btnLogout" style="display: none">
+            로그아웃
+          </button>
+        </div>
+      </div>
+      <div class="muted" id="whoami">권한 확인 중…</div>
+
+      <!-- (A) 로그인 뷰 -->
+      <div id="viewLogin" class="card loginbox" style="display: none">
+        <div class="section">관리자 로그인</div>
+        <div class="body">
+          <form id="formLogin">
+            <div class="field">
+              <label class="label">아이디</label>
+              <input id="loginUser" type="text" placeholder="admin" required />
+            </div>
+            <div class="field">
+              <label class="label">비밀번호</label>
+              <input
+                id="loginPw"
+                type="password"
+                placeholder="********"
+                required
+              />
+            </div>
+            <div class="actions">
+              <button class="btn primary" type="submit">로그인</button>
+            </div>
+            <div id="loginMsg" class="err" style="display: none"></div>
+          </form>
+          <div class="muted" style="margin-top: 8px">
+            관리자 계정이 없으면 <code>node scripts/createAdmin.js</code>로
+            생성하세요.
+          </div>
+        </div>
+      </div>
+
+      <!-- (B) 대시보드 -->
+      <div id="viewDash" style="display: none">
+        <div class="row">
+          <!-- 업로드 -->
+          <div class="card">
+            <div class="section">모델 업로드</div>
+            <div class="body">
+              <form id="formUpload">
+                <div class="field">
+                  <label class="label">제목</label>
+                  <input
+                    id="uTitle"
+                    type="text"
+                    required
+                    placeholder="예: 세포 구조 #1"
+                  />
+                </div>
+                <div class="field">
+                  <label class="label">설명</label>
+                  <textarea
+                    id="uDesc"
+                    required
+                    placeholder="학습 포인트 요약"
+                  ></textarea>
+                </div>
+                <div class="row" style="gap: 12px">
+                  <div class="field">
+                    <label class="label">Sketchfab URL</label>
+                    <input
+                      id="uUrl"
+                      type="url"
+                      required
+                      placeholder="https://sketchfab.com/3d-models/..."
+                    />
+                  </div>
+                  <div class="field">
+                    <label class="label">과목</label>
+                    <select id="uSubject">
+                      <option value="">선택 안 함</option>
+                      <option value="biology">생명과학</option>
+                      <option value="earth">지구과학</option>
+                      <option value="physics">물리학</option>
+                      <option value="chemistry">화학</option>
+                      <option value="geography">지리학</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">썸네일(선택)</label>
+                  <input id="uThumb" type="file" accept="image/*" />
+                  <div class="muted">미선택 시 자동 썸네일 생성</div>
+                </div>
+                <div class="actions">
+                  <button class="btn" type="reset">초기화</button>
+                  <button class="btn primary" type="submit">업로드</button>
+                </div>
+                <div id="upMsg" class="ok" style="display: none">
+                  업로드 완료
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- 리스트/정렬/삭제 -->
+          <div class="card">
+            <div class="section">모델 목록 (드래그로 순서 변경)</div>
+            <div class="body">
+              <div
+                class="actions"
+                style="justify-content: flex-start; margin-bottom: 10px"
+              >
+                <button class="btn" id="btnRefresh">새로고침</button>
+                <button class="btn primary" id="btnSaveOrder">순서 저장</button>
+              </div>
+              <div id="list" class="grid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const qs = (s) => document.querySelector(s);
+      const qsa = (s) => [...document.querySelectorAll(s)];
+      let MODELS = [];
+
+      async function api(path, method = "GET", body) {
+        const res = await fetch(path, {
+          method,
+          headers:
+            body instanceof FormData
+              ? undefined
+              : { "Content-Type": "application/json" },
+          credentials: "include",
+          body: body
+            ? body instanceof FormData
+              ? body
+              : JSON.stringify(body)
+            : undefined,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+          throw Object.assign(new Error(data.error || "요청 실패"), {
+            status: res.status,
+            data,
+          });
+        return data;
+      }
+
+      async function whoami() {
+        try {
+          const me = await api("/api/auth/whoami");
+          return me.user || null;
+        } catch {
+          return null;
+        }
+      }
+
+      function requireAdminOrLoginView(user) {
+        const w = qs("#whoami");
+        if (user && user.role === "admin") {
+          w.textContent = `현재 사용자: ${user.username} (관리자)`;
+          qs("#btnLogout").style.display = "inline-flex";
+          qs("#viewLogin").style.display = "none";
+          qs("#viewDash").style.display = "block";
+          loadList();
+        } else {
+          w.textContent = "관리자 전용 페이지입니다. 로그인 하세요.";
+          qs("#btnLogout").style.display = "none";
+          qs("#viewDash").style.display = "none";
+          qs("#viewLogin").style.display = "block";
+        }
+      }
+
+      async function loadList() {
+        const d = await api("/api/models");
+        MODELS = Array.isArray(d.items) ? d.items.slice() : [];
+        renderList();
+      }
+
+      function cardHTML(m) {
+        const bg = m.thumb
+          ? `style="background-image:url('${String(m.thumb).replace(
+              /'/g,
+              "%27"
+            )}')"`
+          : "";
+        return `
+      <article class="item" data-id="${m.id}" draggable="true">
+        <div class="thumb" ${bg}></div>
+        <div class="meta">
+          <div class="title">${m.title}</div>
+          <div class="sub">${m.description || ""}</div>
+        </div>
+        <button class="del" title="삭제" aria-label="삭제">×</button>
+      </article>`;
+      }
+
+      function renderList() {
+        qs("#list").innerHTML = MODELS.map(cardHTML).join("");
+        // 삭제
+        qsa("#list .item .del").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.closest(".item")?.dataset?.id;
+            if (!id) return;
+            if (!confirm("정말 삭제하시겠습니까?")) return;
+            try {
+              await api(`/api/models/${id}`, "DELETE");
+              await loadList();
+            } catch (e) {
+              alert("삭제 실패: " + (e.data?.error || e.message));
+            }
+          });
+        });
+        // 드래그정렬
+        setupDnD();
+      }
+
+      function setupDnD() {
+        const container = qs("#list");
+        const items = qsa("#list .item");
+        items.forEach((card) => {
+          card.addEventListener("dragstart", (e) => {
+            card.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", card.dataset.id);
+          });
+          card.addEventListener("dragend", () => {
+            card.classList.remove(
+              "dragging",
+              "drag-over-before",
+              "drag-over-after"
+            );
+            qsa("#list .item").forEach((c) =>
+              c.classList.remove("drag-over-before", "drag-over-after")
+            );
+          });
+          card.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            const rect = card.getBoundingClientRect();
+            const before = e.clientY < rect.top + rect.height / 2;
+            qsa("#list .item").forEach((c) =>
+              c.classList.remove("drag-over-before", "drag-over-after")
+            );
+            card.classList.add(before ? "drag-over-before" : "drag-over-after");
+            e.dataTransfer.dropEffect = "move";
+          });
+          card.addEventListener("dragleave", () => {
+            card.classList.remove("drag-over-before", "drag-over-after");
+          });
+          card.addEventListener("drop", (e) => {
+            e.preventDefault();
+            const fromId = e.dataTransfer.getData("text/plain");
+            const toId = card.dataset.id;
+            if (!fromId || !toId || fromId === toId) return;
+            const rect = card.getBoundingClientRect();
+            const placeBefore = e.clientY < rect.top + rect.height / 2;
+            // MODELS 배열 재배치
+            let fromIdx = MODELS.findIndex(
+              (m) => String(m.id) === String(fromId)
+            );
+            let toIdx = MODELS.findIndex((m) => String(m.id) === String(toId));
+            if (fromIdx < 0 || toIdx < 0) return;
+            const [moved] = MODELS.splice(fromIdx, 1);
+            toIdx = MODELS.findIndex((m) => String(m.id) === String(toId));
+            const insertAt = placeBefore ? toIdx : toIdx + 1;
+            MODELS.splice(insertAt, 0, moved);
+            renderList(); // 다시 그림
+          });
+        });
+
+        // 순서 저장 버튼
+        qs("#btnSaveOrder").onclick = async () => {
+          try {
+            const order = MODELS.map((m) => m.id);
+            await api("/api/models/reorder", "POST", { order });
+            alert("순서 저장 완료");
+          } catch (e) {
+            alert("순서 저장 실패: " + (e.data?.error || e.message));
+          }
+        };
+      }
+
+      // 이벤트 바인딩
+      document
+        .getElementById("btnLogout")
+        .addEventListener("click", async () => {
+          try {
+            await api("/api/auth/logout", "POST");
+          } catch {}
+          location.reload();
+        });
+      document.getElementById("btnRefresh").addEventListener("click", loadList);
+
+      // 로그인 제출
+      document
+        .getElementById("formLogin")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const u = qs("#loginUser").value.trim();
+          const p = qs("#loginPw").value.trim();
+          const msg = qs("#loginMsg");
+          msg.style.display = "none";
+          try {
+            const r = await api("/api/auth/login", "POST", {
+              username: u,
+              password: p,
+            });
+            // 관리자만 통과
+            const me = await whoami();
+            if (!me || me.role !== "admin") {
+              msg.textContent = "관리자 전용입니다.";
+              msg.style.display = "block";
+              return;
+            }
+            requireAdminOrLoginView(me);
+          } catch (err) {
+            msg.textContent = err.data?.error || "로그인 실패";
+            msg.style.display = "block";
+          }
+        });
+
+      // 업로드 제출
+      document
+        .getElementById("formUpload")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fd = new FormData();
+          fd.append("title", qs("#uTitle").value.trim());
+          fd.append("description", qs("#uDesc").value.trim());
+          fd.append("url", qs("#uUrl").value.trim());
+          fd.append("subject", qs("#uSubject").value);
+          const file = qs("#uThumb").files[0];
+          if (file) fd.append("thumb", file);
+          const msg = qs("#upMsg");
+          msg.style.display = "none";
+          try {
+            await api("/api/models", "POST", fd);
+            msg.textContent = "업로드 완료";
+            msg.style.display = "block";
+            e.target.reset();
+            await loadList();
+          } catch (err) {
+            alert("업로드 실패: " + (err.data?.error || err.message));
+          }
+        });
+
+      // 시작: 권한 확인 후 화면 전환
+      (async () => {
+        const me = await whoami();
+        requireAdminOrLoginView(me);
+      })();
+    </script>
+  </body>
+</html>

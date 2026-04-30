@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>중고등학생 3D 교육 도움 시스템</title>
+        <link rel="icon" type="image/png" href="/images/invert_logo.png" />
+        <meta
+            name="description"
+            content="파일(models.json) 또는 /api/models 기반 교육용 모델 카탈로그. 과목 필터 + 로그인/로그아웃 + 마이페이지(+관리자 차단) + Sketchfab 임베드 팝업."
+        />
+        <link
+            href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css"
+            rel="stylesheet"
+        />
+
+        <style>
+            .flex-parent > * {
+                min-width: 0;
+            }
+            :root {
+                --c1: #bc2c3c;
+                --c2: #4e77ba;
+                --bg: #f7f7f8;
+                --card: #fff;
+                --text: #111;
+                --muted: #666;
+                --bd: #e6e6e8;
+                --ring: #4e77ba;
+                --danger: #e63946;
+                --ok: #16a34a;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+                --radius: 16px;
+                --login-color: #4ad395;
+                --login-dark: #23004d;
+                --login-light: #a49eac;
+                --login-lighten: #f2f2f2;
+                --login-hover: #65bf97;
+                --login-font: 'Open Sans', sans-serif;
+                --login-big: 1.5rem;
+                --login-normal: 0.938rem;
+                --login-small: 0.813rem;
+            }
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                font: 14px/1.6 Pretendard, system-ui, -apple-system, Segoe UI,
+                    Roboto, Noto Sans KR;
+                color: var(--text);
+                background: var(--bg);
+            }
+            .no-scroll {
+                overflow: hidden;
+            }
+            .container {
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 0 16px;
+            }
+            header {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid var(--bd);
+            }
+            .nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 64px;
+                gap: 12px;
+            }
+            .brand {
+                font-size: 1.2rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.6rem;
+                font-weight: 800;
+                text-decoration: none;
+                color: var(--text);
+            }
+            .brand:hover {
+                opacity: 0.85;
+            }
+            .logo {
+                width: 28px;
+                height: 28px;
+                border-radius: 9px;
+                background: linear-gradient(135deg, var(--c1), var(--c2));
+            }
+            .search {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: #fff;
+                border: 1px solid var(--bd);
+                border-radius: 14px;
+                padding: 8px 10px;
+                margin: 0 16px;
+            }
+            .search input {
+                border: 0;
+                outline: 0;
+                flex: 1;
+                font: inherit;
+            }
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                border: 1px solid var(--bd);
+                background: #fff;
+                border-radius: 12px;
+                padding: 8px 12px;
+                text-decoration: none;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+            .btn:hover {
+                transform: translateY(-1px);
+            }
+            .btn.primary {
+                background: linear-gradient(90deg, var(--c1), var(--c2));
+                border: none;
+                color: #fff;
+                box-shadow: var(--shadow);
+            }
+            .btn.ghost {
+                background: #fff;
+                border: 1px solid var(--bd);
+                color: #333;
+            }
+
+            /* Filter Bar */
+            .filterbar {
+                background: #fff;
+                border-top: 1px solid var(--bd);
+                border-bottom: 1px solid var(--bd);
+            }
+            .filters {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 10px 0;
+            }
+            .filters .group {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .filters input[type='checkbox'] {
+                width: 16px;
+                height: 16px;
+            }
+            .filters label {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                border: 1px solid var(--bd);
+                border-radius: 999px;
+                cursor: pointer;
+                user-select: none;
+            }
+            .filters .clear {
+                margin-left: auto;
+            }
+
+            /* Layout */
+            main {
+                padding: 16px 0;
+            }
+            .results {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 16px;
+            }
+            @media (max-width: 1200px) {
+                .results {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            @media (max-width: 900px) {
+                .results {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            @media (max-width: 520px) {
+                .results {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .item {
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                background: var(--card);
+                border: 1px solid var(--bd);
+                border-radius: var(--radius);
+                position: relative;
+            }
+            .thumb {
+                aspect-ratio: 1.2/1;
+                background: #e9e9ee;
+                display: grid;
+                place-items: center;
+                color: #888;
+                border-bottom: 1px solid var(--bd);
+                cursor: pointer;
+                position: relative;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+            .thumb::after {
+                content: '클릭하여 미리보기';
+                position: absolute;
+                bottom: 8px;
+                right: 8px;
+                background: rgba(17, 17, 17, 0.75);
+                color: #fff;
+                font-size: 0.75rem;
+                padding: 4px 8px;
+                border-radius: 8px;
+                z-index: 1;
+                pointer-events: none;
+            }
+            /* 삭제 버튼: 메인에서는 항상 숨김(관리자 기능은 /admin 전용) */
+            .thumb-del {
+                display: none;
+            }
+
+            /* ★ 북마크 버튼: 우상단으로 이동 */
+            .bookmark-btn {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                left: auto;
+                z-index: 2;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: inline-grid;
+                place-items: center;
+                background: rgba(255, 255, 255, 0.95);
+                border: 1px solid var(--bd);
+                cursor: pointer;
+                box-shadow: var(--shadow);
+                line-height: 1;
+            }
+            .bookmark-btn i {
+                font-size: 18px;
+            }
+            .bookmark-btn.active {
+                background: #fff;
+            }
+            .bookmark-btn:hover {
+                filter: brightness(0.96);
+            }
+
+            .meta {
+                padding: 10px;
+                text-align: left;
+            }
+            .title {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-weight: 700;
+                text-align: left;
+            }
+            .sub {
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3; /* 보여줄 줄 수 */
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: normal; /* 기존 nowrap 무효화 */
+
+                color: var(--muted);
+                font-size: 0.85rem;
+                margin-top: 2px;
+                text-align: left;
+            }
+
+            /* Firefox 등 WebKit 미지원용 대체 */
+            @supports not (-webkit-line-clamp: 3) {
+                .sub {
+                    display: block;
+                    line-height: 1.4;
+                    max-height: calc(1.4em * 3); /* 3줄 높이까지만 보이게 */
+                    overflow: hidden;
+                }
+            }
+            /* Modal */
+            .modal {
+                position: fixed;
+                inset: 0;
+                display: none;
+                place-items: center;
+                background: rgba(17, 17, 17, 0.6);
+                backdrop-filter: blur(2px);
+                z-index: 100;
+            }
+            .modal.open {
+                display: grid;
+            }
+            .dialog {
+                width: min(1000px, 92vw);
+                background: #000;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                overflow: hidden;
+            }
+            .dialog-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 14px;
+                background: #111;
+                color: #eee;
+            }
+            .dialog-title {
+                font-weight: 700;
+                font-size: 0.95rem;
+            }
+            .dialog-close {
+                background: transparent;
+                border: 0;
+                color: #ddd;
+                font-size: 18px;
+                cursor: pointer;
+            }
+            .dialog-body {
+                aspect-ratio: 16/9;
+                background: #000;
+            }
+            .dialog-body iframe {
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+
+            /* Light dialog (Login/MyPage) */
+            .dialog.light {
+                background: #fff;
+                color: #111;
+            }
+            .dialog.light .dialog-header {
+                background: #f6f7fb;
+                color: #111;
+                border-bottom: 1px solid var(--bd);
+            }
+            .dialog.light .dialog-body {
+                aspect-ratio: auto;
+                padding: 0;
+            }
+
+            /* 🍑 AI 검색 토글 스위치 */
+            .ai-toggle-wrapper {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: 10px;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .ai-toggle {
+                position: relative;
+                display: inline-block;
+                width: 48px;
+                height: 24px;
+            }
+
+            .ai-toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .ai-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: 0.4s;
+                border-radius: 24px;
+            }
+
+            .ai-slider:before {
+                position: absolute;
+                content: '';
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: 0.4s;
+                border-radius: 50%;
+            }
+
+            input:checked + .ai-slider {
+                background-color: #2196f3;
+            }
+
+            input:checked + .ai-slider:before {
+                transform: translateX(24px);
+            }
+
+            .ai-toggle-label {
+                user-select: none;
+                cursor: pointer;
+            }
+
+            /* Footer */
+            footer {
+                border-top: 1px solid var(--bd);
+                color: #777;
+            }
+            footer .inner {
+                padding: 14px 0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            /* ===== Login Component (compiled) ===== */
+            .login * {
+                box-sizing: border-box;
+            }
+            .login {
+                display: grid;
+                grid-template-columns: 100%;
+                height: 100vh;
+                margin: 0 1.5rem;
+            }
+            .login__content {
+                display: grid;
+            }
+            .login__img {
+                justify-self: center;
+            }
+            .login__img img {
+                width: 310px;
+                margin-top: 1.5rem;
+            }
+            .login__forms {
+                position: relative;
+                height: 368px;
+            }
+            .login__register,
+            .login__create {
+                position: absolute;
+                bottom: 1rem;
+                width: 100%;
+                background-color: var(--login-lighten);
+                padding: 2rem 1rem;
+                border-radius: 1rem;
+                text-align: center;
+                box-shadow: 0 8px 20px rgba(35, 0, 77, 0.2);
+                animation-duration: 0.4s;
+                animation-name: animateLogin;
+            }
+            .login__title {
+                font-size: var(--login-big);
+                margin-bottom: 2rem;
+                font-family: var(--login-font);
+            }
+            .login__box {
+                display: grid;
+                grid-template-columns: max-content 1fr;
+                column-gap: 0.5rem;
+                padding: 1.125rem 1rem;
+                background-color: #fff;
+                margin-top: 1rem;
+                border-radius: 0.5rem;
+            }
+            .login__icon {
+                font-size: 1.5rem;
+                color: var(--login-color);
+            }
+            .login__input {
+                border: none;
+                outline: none;
+                font-size: var(--login-normal);
+                font-weight: 700;
+                color: var(--login-dark);
+                width: 100%;
+                font-family: var(--login-font);
+            }
+            .login__input::placeholder {
+                font-size: var(--login-normal);
+                font-family: var(--login-font);
+                color: var(--login-light);
+            }
+            .login__forgot {
+                display: block;
+                width: max-content;
+                margin-left: auto;
+                margin-top: 0.5rem;
+                font-size: var(--login-small);
+                font-weight: 600;
+                color: var(--login-light);
+            }
+            .login__button {
+                display: block;
+                padding: 1rem;
+                margin: 2rem 0;
+                background-color: var(--login-color);
+                color: #fff;
+                font-weight: 600;
+                text-align: center;
+                border-radius: 0.5rem;
+                transition: 0.3s;
+            }
+            .login__button:hover {
+                background-color: var(--login-hover);
+            }
+            .login__account,
+            .login__signin,
+            .login__signup {
+                font-weight: 600;
+                font-size: var(--login-small);
+            }
+            .login__account--account {
+                color: var(--login-dark);
+            }
+            .login__signin--signup,
+            .login__signup--signup {
+                color: var(--login-color);
+                cursor: pointer;
+            }
+            .login__social {
+                margin-top: 2rem;
+            }
+            .login__social--icon {
+                font-size: 1.5rem;
+                color: var(--login-dark);
+                margin: 0 1rem;
+            }
+            .block {
+                display: block;
+            }
+            .none {
+                display: none;
+            }
+            @keyframes animateLogin {
+                0% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.1);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+            @media (min-width: 576px) {
+                .login__forms {
+                    width: 348px;
+                    justify-self: center;
+                }
+            }
+            @media (min-width: 1024px) {
+                .login {
+                    height: 100vh;
+                    overflow: hidden;
+                }
+                .login__content {
+                    grid-template-columns: repeat(2, max-content);
+                    justify-content: center;
+                    align-items: center;
+                    margin-left: 10rem;
+                }
+                .login__img {
+                    display: flex;
+                    width: 600px;
+                    height: 588px;
+                    background-color: #fff;
+                    border-radius: 1rem;
+                    padding-left: 1rem;
+                }
+                .login__img img {
+                    width: 80%;
+                    margin-top: 0;
+                }
+                .login__register,
+                .login__create {
+                    left: -11rem;
+                }
+                .login__register {
+                    bottom: -2rem;
+                }
+                .login__create {
+                    bottom: -5.5rem;
+                }
+            }
+
+            /* ===== My Page (simple) ===== */
+            .mypage {
+                padding: 18px;
+            }
+            .mypage .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            @media (max-width: 720px) {
+                .mypage .row {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .mypage .card {
+                border: 1px solid var(--bd);
+                border-radius: 12px;
+                padding: 14px;
+                background: #fff;
+            }
+            .mypage h3 {
+                margin: 0 0 8px 0;
+            }
+            /* 로고 전용 스타일 */
+            .brand-logo {
+                height: 2em; /* 제목 크기에 맞춤 */
+                width: auto;
+                vertical-align: middle;
+                border-radius: 6px; /* 살짝 둥근 모서리 */
+                filter: invert(1);
+            }
+
+        </style>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="chatbot.css" />
+    </head>
+    <body>
+        <header>
+            <div class="container nav">
+                <a class="brand" id="brandHome" href="/">
+                    <img src="images/logo.png" alt="로고" class="brand-logo" />
+                    중고등학생 3D 교육 도움 시스템
+                </a>
+                <div class="search">
+                    🔎<input
+                        id="q"
+                        placeholder="모델/설명 검색 (예: 세포, 화산, DNA, 광학)"
+                    />
+                    <button class="btn" id="btnSearch">검색</button>
+                    <!-- 🍑 AI 검색 토글 스위치 -->
+                    <div class="ai-toggle-wrapper">
+                        <label class="ai-toggle">
+                            <input
+                                type="checkbox"
+                                id="aiSearchToggle"
+                                checked
+                            />
+                            <span class="ai-slider"></span>
+                        </label>
+                        <label for="aiSearchToggle" class="ai-toggle-label">
+                            🤖 AI 검색
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px">
+                    <button class="btn primary" id="btnAuth" type="button">
+                        로그인
+                    </button>
+                    <button
+                        class="btn ghost"
+                        id="btnLogout"
+                        type="button"
+                        style="display: none"
+                    >
+                        로그아웃
+                    </button>
+                </div>
+            </div>
+            <div class="filterbar">
+                <div class="container filters">
+                    <div class="group" id="subjectGroup">
+                        <label
+                            ><input
+                                type="checkbox"
+                                class="subject-chk"
+                                value="biology"
+                            />생명과학</label
+                        >
+                        <label
+                            ><input
+                                type="checkbox"
+                                class="subject-chk"
+                                value="earth"
+                            />지구과학</label
+                        >
+                        <label
+                            ><input
+                                type="checkbox"
+                                class="subject-chk"
+                                value="physics"
+                            />물리학</label
+                        >
+                        <label
+                            ><input
+                                type="checkbox"
+                                class="subject-chk"
+                                value="chemistry"
+                            />화학</label
+                        >
+                        <label
+                            ><input
+                                type="checkbox"
+                                class="subject-chk"
+                                value="geography"
+                            />지리학</label
+                        >
+                    </div>
+                    <button class="btn clear" id="btnClear" type="button">
+                        초기화
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <div id="count" class="muted" style="margin-bottom: 8px"></div>
+            <div class="results" id="results"></div>
+            <div
+                class="pager"
+                id="pager"
+                style="text-align: center; margin-top: 16px"
+            ></div>
+        </main>
+
+        <!-- Model Viewer Modal -->
+        <div
+            class="modal"
+            id="modal"
+            aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+        >
+            <div class="dialog">
+                <div class="dialog-header">
+                    <div class="dialog-title" id="modalTitle">미리보기</div>
+                    <button
+                        class="dialog-close"
+                        id="btnClose"
+                        type="button"
+                        aria-label="닫기"
+                    >
+                        ✕
+                    </button>
+                </div>
+                <div class="dialog-body">
+                    <iframe
+                        id="viewer"
+                        allow="autoplay; fullscreen; xr-spatial-tracking"
+                        xr-spatial-tracking
+                        execution-while-out-of-viewport
+                        execution-while-not-rendered
+                        web-share
+                        allowfullscreen
+                        mozallowfullscreen="true"
+                        webkitallowfullscreen="true"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Modal (메인에서는 관리자 로그인 차단) -->
+        <div
+            class="modal"
+            id="modalLogin"
+            aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+        >
+            <div class="login">
+                <div class="login__content">
+                    <div class="login__img">
+                        <img
+                            src="https://image.freepik.com/free-vector/code-typing-concept-illustration_114360-3581.jpg"
+                            alt="user login"
+                        />
+                    </div>
+                    <div class="login__forms">
+                        <form
+                            action="#"
+                            class="login__register block"
+                            id="login-in"
+                        >
+                            <h1 class="login__title">Sign In</h1>
+                            <div class="login__box">
+                                <i class="bx bx-user login__icon"></i>
+                                <input
+                                    id="loginUsername"
+                                    type="text"
+                                    placeholder="Username"
+                                    class="login__input"
+                                    required
+                                />
+                            </div>
+                            <div class="login__box">
+                                <i class="bx bx-lock login__icon"></i>
+                                <input
+                                    id="loginPw"
+                                    type="password"
+                                    placeholder="Password"
+                                    class="login__input"
+                                    required
+                                />
+                            </div>
+                            <button
+                                class="login__button"
+                                id="btnSignIn"
+                                type="submit"
+                            >
+                                Sign In
+                            </button>
+                            <div>
+                                <span
+                                    class="login__account login__account--account"
+                                    >Don't Have an Account?</span
+                                >
+                                <span
+                                    class="login__signin login__signin--signup"
+                                    id="sign-up"
+                                    >Sign Up</span
+                                >
+                            </div>
+                        </form>
+
+                        <form
+                            action="#"
+                            class="login__create none"
+                            id="login-up"
+                        >
+                            <h1 class="login__title">Create Account</h1>
+                            <div class="login__box">
+                                <i class="bx bx-user login__icon"></i>
+                                <input
+                                    id="signupUsername"
+                                    type="text"
+                                    placeholder="Username"
+                                    class="login__input"
+                                    required
+                                />
+                            </div>
+                            <div class="login__box">
+                                <i class="bx bx-at login__icon"></i>
+                                <input
+                                    id="signupEmail"
+                                    type="email"
+                                    placeholder="Email (optional)"
+                                    class="login__input"
+                                />
+                            </div>
+                            <div class="login__box">
+                                <i class="bx bx-lock login__icon"></i>
+                                <input
+                                    id="signupPw"
+                                    type="password"
+                                    placeholder="Password"
+                                    class="login__input"
+                                    required
+                                />
+                            </div>
+                            <button
+                                class="login__button"
+                                id="btnSignUp"
+                                type="submit"
+                            >
+                                Sign Up
+                            </button>
+                            <div>
+                                <span
+                                    class="login__account login__account--account"
+                                    >Already have an Account?</span
+                                >
+                                <span
+                                    class="login__signup login__signup--signup"
+                                    id="sign-in"
+                                    >Sign In</span
+                                >
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Page Modal (간단 버전 — 버튼 전환용) -->
+        <div
+            class="modal"
+            id="modalMypage"
+            aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+        >
+            <div class="dialog light" style="width: min(720px, 92vw)">
+                <div class="dialog-header">
+                    <div class="dialog-title">마이페이지</div>
+                    <button
+                        class="dialog-close"
+                        id="btnCloseMypage"
+                        type="button"
+                        aria-label="닫기"
+                    >
+                        ✕
+                    </button>
+                </div>
+                <div class="dialog-body">
+                    <div class="mypage">
+                        <div class="row">
+                            <div class="card">
+                                <h3>내 정보</h3>
+                                <div id="myUser">-</div>
+                            </div>
+                            <div class="card">
+                                <h3>즐겨찾기 (예정)</h3>
+                                <div class="muted">
+                                    추후 북마크/최근 본 항목 등을 보여줄
+                                    예정입니다.
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            style="
+                                margin-top: 12px;
+                                display: flex;
+                                gap: 8px;
+                                justify-content: flex-end;
+                            "
+                        >
+                            <button class="btn ghost" id="btnMypageLogout">
+                                로그아웃
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div
+            id="toast"
+            style="
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                right: auto;
+                z-index: 9999;
+                transform: translate(-50%, -12px);
+                opacity: 0;
+                background: rgba(17, 17, 17, 0.9);
+                color: #fff;
+                padding: 12px 16px;
+                border-radius: 10px;
+                font-weight: 700;
+                font-size: 0.95rem;
+                text-align: center;
+                max-width: 90vw;
+                pointer-events: none;
+                transition: opacity 0.25s, transform 0.25s;
+            "
+        ></div>
+
+        <footer>
+            <div class="container inner">
+                <div>© <span id="year"></span> Model Catalog</div>
+                <div>
+                    <a href="#" onclick="event.preventDefault()">Privacy</a> ·
+                    <a href="#" onclick="event.preventDefault()">Terms</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- 🍎 챗봇 Floating 버튼 -->
+        <button
+            class="floating-chat-btn"
+            id="chatbotBtn"
+            title="학습 도우미 챗봇"
+        >
+            🤖
+        </button>
+
+        <!-- 🍎 챗봇 모달 -->
+        <div class="chat-modal" id="chatModal">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>🍎 학습 도우미</h3>
+                    <select id="chatSubject" title="과목 선택">
+                        <option value="">과목 선택</option>
+                        <option value="biology">생명과학</option>
+                        <option value="physics">물리학</option>
+                        <option value="chemistry">화학</option>
+                        <option value="earth">지구과학</option>
+                        <option value="geography">지리학</option>
+                    </select>
+                    <button
+                        class="dialog-close"
+                        id="closeChatBtn"
+                        aria-label="닫기"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message">
+                        <div class="bubble">
+                            안녕하세요! 학습 도우미입니다 😊<br />
+                            과목을 선택하고 궁금한 것을 물어보세요!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-wrapper">
+                    <button id="quizBtn">📝 퀴즈 요청</button>
+                    <input id="chatInput" placeholder="질문을 입력하세요..." />
+                    <button id="sendChatBtn">전송</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fallback data -->
+        <script type="application/json" id="models-json">
+            [
+                {"id":1,"title":"세포 구조 #1","description":"세포의 기본 구조와 소기관 배치를 살펴볼 수 있는 모델","url":"https://sketchfab.com/3d-models/make-your-own-steampunk-house-0bceb4f2d7444809b022ba864ac03df3","thumb":"thumbs/cell-1.png","subject":"biology"},
+                {"id":2,"title":"지구 단면 #2","description":"지각–맨틀–핵의 층상을 단면으로 표현","url":"https://sketchfab.com/3d-models/make-your-own-steampunk-house-0bceb4f2d7444809b022ba864ac03df3","thumb":"thumbs/earth-2.png","subject":"earth"},
+                {"id":3,"title":"원자 모델 #3","description":"원자핵과 전자껍질의 개념을 시각화","url":"https://sketchfab.com/3d-models/make-your-own-steampunk-house-0bceb4f2d7444809b022ba864ac03df3","thumb":"thumbs/atom-3.png","subject":"chemistry"},
+                {"id":4,"title":"광학 실험 #4","description":"렌즈를 통한 굴절과 상의 형성 원리","url":"https://sketchfab.com/3d-models/make-your-own-steampunk-house-0bceb4f2d7444809b022ba864ac03df3","thumb":"thumbs/optics-4.png","subject":"physics"}
+        </script>
+
+        <script>
+            /* ====== Utils ====== */
+            const qs = (s) => document.querySelector(s);
+            const qsa = (s) => [...document.querySelectorAll(s)];
+            function showToast(msg, bg = '#16a34a') {
+                const t = document.getElementById('toast');
+                if (!t) return;
+                t.textContent = msg;
+                t.style.background = bg;
+                t.style.opacity = '1';
+                t.style.transform = 'translate(-50%, 0)'; // 가운데에서 아래로 살짝
+                clearTimeout(t._timer);
+                t._timer = setTimeout(() => {
+                    t.style.opacity = '0';
+                    t.style.transform = 'translate(-50%, -12px)'; // 위로 사라짐
+                }, 1800);
+            }
+            function openLoginModal() {
+                const mod = qs('#modalLogin');
+                if (!mod) return;
+                mod.classList.add('open');
+                mod.focus();
+                document.body.classList.add('no-scroll');
+            }
+            function closeLoginModal() {
+                const mod = document.querySelector('#modalLogin');
+                if (!mod) return;
+                mod.classList.remove('open');
+                document.body.classList.remove('no-scroll');
+            }
+            let MODELS = [];
+            const SUBJECTS = {
+                biology: {
+                    label: '생명과학',
+                    keywords: [
+                        '세포',
+                        'DNA',
+                        '생명',
+                        '생물',
+                        '유전',
+                        '단백질',
+                        '광합성',
+                    ],
+                },
+                earth: {
+                    label: '지구과학',
+                    keywords: [
+                        '지구',
+                        '단면',
+                        '판 구조',
+                        '화산',
+                        '지진',
+                        '대기',
+                        '기상',
+                        '지질',
+                    ],
+                },
+                physics: {
+                    label: '물리학',
+                    keywords: [
+                        '광학',
+                        '파동',
+                        '전기',
+                        '자기',
+                        '역학',
+                        '운동',
+                        '렌즈',
+                    ],
+                },
+                chemistry: {
+                    label: '화학',
+                    keywords: [
+                        '원자',
+                        '분자',
+                        '화합물',
+                        '실험',
+                        '기구',
+                        '반응',
+                        '주기율',
+                    ],
+                },
+                geography: {
+                    label: '지리학',
+                    keywords: ['지형', '삼각주', '협곡', '지리', '지도'],
+                },
+            };
+            const state = {
+                q: '',
+                page: 1,
+                per: 12,
+                sort: 'relevance',
+                subject: null,
+                isLoggedIn: false,
+                user: null,
+                currentUser: null, // 🍎 챗봇 버튼 표시용
+                bookmarks: new Set(),
+                useAISearch: true, // 🍑 AI 검색 사용 여부 (기본값: true)
+            };
+
+            // ---- 자동 썸네일 (캔버스) ----
+            const THUMB_CACHE = new Map();
+            function hashCode(str) {
+                let h = 0;
+                for (let i = 0; i < str.length; i++) {
+                    h = (h << 5) - h + str.charCodeAt(i);
+                    h |= 0;
+                }
+                return Math.abs(h);
+            }
+            function pickColors(key) {
+                const palette = [
+                    ['#4e77ba', '#bc2c3c'],
+                    ['#3aa675', '#0e7490'],
+                    ['#7c3aed', '#fb7185'],
+                    ['#f59e0b', '#ef4444'],
+                    ['#2563eb', '#16a34a'],
+                    ['#9333ea', '#3b82f6'],
+                    ['#0ea5e9', '#22c55e'],
+                    ['#ef4444', '#f97316'],
+                ];
+                const idx = hashCode(key) % palette.length;
+                return palette[idx];
+            }
+            function genThumb(model) {
+                const key = String(model.id || model.title);
+                if (THUMB_CACHE.has(key)) return THUMB_CACHE.get(key);
+                const c = document.createElement('canvas');
+                c.width = 640;
+                c.height = 480;
+                const ctx = c.getContext('2d');
+                const [c1, c2] = pickColors(key);
+                const g = ctx.createLinearGradient(0, 0, 640, 480);
+                g.addColorStop(0, c1);
+                g.addColorStop(1, c2);
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, 640, 480);
+                ctx.fillStyle = 'rgba(255,255,255,.9)';
+                ctx.font = 'bold 32px Pretendard, system-ui';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                const title = model.title || 'Untitled';
+                const words = title.split(/\s+/);
+                let lines = [],
+                    cur = '';
+                for (const w of words) {
+                    const test = cur ? cur + ' ' + w : w;
+                    if (ctx.measureText(test).width > 560) {
+                        lines.push(cur);
+                        cur = w;
+                    } else {
+                        cur = test;
+                    }
+                }
+                if (cur) lines.push(cur);
+                lines = lines.slice(0, 3);
+                let y = 24;
+                for (const ln of lines) {
+                    ctx.fillText(ln, 24, y);
+                    y += 38;
+                }
+                ctx.font = '16px Pretendard, system-ui';
+                const d = model.description || '';
+                const desc = d.length > 60 ? d.slice(0, 57) + '…' : d;
+                if (desc) {
+                    ctx.fillText(desc, 24, y + 6);
+                }
+                const url = c.toDataURL('image/png');
+                THUMB_CACHE.set(key, url);
+                return url;
+            }
+
+            function toEmbed(url) {
+                try {
+                    const last = url.split('/').pop();
+                    const uid = (last || '').split('-').pop();
+                    return `https://sketchfab.com/models/${uid}/embed?ui_theme=dark`;
+                } catch (e) {
+                    return url;
+                }
+            }
+
+            async function loadModels() {
+                try {
+                    const res = await fetch('/api/models', {
+                        credentials: 'include',
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && Array.isArray(data.items)) {
+                            MODELS = data.items.map((m) => ({
+                                id: m.id,
+                                title: m.title,
+                                description: m.description,
+                                url: m.url,
+                                subject: m.subject,
+                                thumb: m.thumb || null,
+                            }));
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('GET /api/models 실패', e);
+                }
+
+                try {
+                    const res = await fetch('models.json', {
+                        cache: 'no-store',
+                    });
+                    if (res.ok) {
+                        MODELS = await res.json();
+                        if (Array.isArray(MODELS) && MODELS.length) return;
+                    }
+                } catch (e) {
+                    console.warn('models.json 로드 실패', e);
+                }
+
+                try {
+                    const fallback = document.getElementById('models-json');
+                    if (fallback) {
+                        MODELS = JSON.parse(fallback.textContent || '[]');
+                    }
+                } catch (e) {
+                    console.warn('inline JSON 파싱 실패', e);
+                    MODELS = [];
+                }
+            }
+
+            function openModal(title, url) {
+                const modal = qs('#modal');
+                const iframe = qs('#viewer');
+                qs('#modalTitle').textContent = title || '미리보기';
+                iframe.src = toEmbed(url);
+                modal.classList.add('open');
+                modal.focus();
+                document.body.classList.add('no-scroll');
+            }
+            function closeModal() {
+                const modal = qs('#modal');
+                const iframe = qs('#viewer');
+                modal.classList.remove('open');
+                document.body.classList.remove('no-scroll');
+                iframe.src = '';
+            }
+
+            function matchSubject(m, key) {
+                if (m.subject && m.subject === key) return true;
+                const text = (
+                    m.title +
+                    ' ' +
+                    (m.description || '')
+                ).toLowerCase();
+                const kw = SUBJECTS[key].keywords;
+                return kw.some((k) => text.includes(k.toLowerCase()));
+            }
+
+            function isBookmarked(id) {
+                return state.bookmarks.has(Number(id));
+            }
+
+            function cardHTML(m) {
+                const src = m.thumb || genThumb(m);
+                const bg = src
+                    ? ` style="background-image:url('${String(src).replace(
+                          /'/g,
+                          '%27'
+                      )}')"`
+                    : '';
+                const label = src ? '' : `썸네일 ${m.id}`;
+                const bmActive = isBookmarked(m.id);
+                return `
+      <article class="item" data-id="${m.id}">
+        <div class="thumb" data-id="${m.id}" data-title="${
+                    m.title
+                }" data-url="${m.url}"${bg}>
+          ${label}
+          <button class="bookmark-btn${
+              bmActive ? ' active' : ''
+          }" type="button" title="북마크" aria-label="북마크" data-bookmark="${
+                    bmActive ? '1' : '0'
+                }" style="display:none;">
+            <i class='bx ${bmActive ? 'bxs-bookmark' : 'bx-bookmark'}'></i>
+          </button>
+          <button class="thumb-del" type="button" title="삭제" aria-label="삭제">×</button>
+        </div>
+        <div class="meta">
+          <div class="title">${m.title}</div>
+          <div class="sub">${m.description || ''}</div>
+        </div>
+      </article>`;
+            }
+
+            /* ================== 🍑 하이브리드 검색 함수들 ================== */
+
+            // 🍑 점수 정규화 함수 (0~1 범위로 변환)
+            function normalizeScores(results) {
+                if (results.length === 0) return results;
+
+                const scores = results.map((r) => r.score);
+                const max = Math.max(...scores);
+                const min = Math.min(...scores);
+
+                if (max === min) {
+                    return results.map((r) => ({ ...r, normScore: 1 }));
+                }
+
+                return results.map((r) => ({
+                    ...r,
+                    normScore: (r.score - min) / (max - min),
+                }));
+            }
+
+            // 🍑 AI 의미 검색 호출
+            async function fetchSemanticResults(query) {
+                if (!query) return [];
+
+                try {
+                    const res = await fetch(
+                        `/api/semantic_search?q=${encodeURIComponent(
+                            query
+                        )}&k=5`
+                    );
+                    const data = await res.json();
+
+                    if (data.error || data.fallback) {
+                        console.log('🍑 AI 검색 사용 불가:', data.error);
+                        return [];
+                    }
+
+                    // 🍑 Score 0.5 이상만 필터링 (50% 이상 유사도)
+                    return data.results
+                        .filter((r) => r.score >= 0.35)
+                        .map((r) => ({
+                            id: r.id,
+                            item: MODELS.find((m) => m.id === r.id) || r, // 로컬 데이터 우선
+                            score: r.score,
+                            source: 'ai',
+                        }));
+                } catch (error) {
+                    console.error('🍑 AI 검색 오류:', error);
+                    return [];
+                }
+            }
+
+            // 🍑 하이브리드 검색 (문자열 + AI)
+            async function hybridSearch(query) {
+                // 1. 문자열 검색 (기존 방식)
+                const localResults = MODELS.filter(
+                    (m) =>
+                        !query ||
+                        (m.title + (m.description || ''))
+                            .toLowerCase()
+                            .includes(query.toLowerCase())
+                ).map((m) => ({
+                    id: m.id,
+                    item: m,
+                    score: 1.0, // 문자열 매칭은 기본 점수 1.0
+                    source: 'text',
+                }));
+
+                // 쿼리가 없으면 문자열 검색만 반환
+                if (!query) {
+                    return localResults.map((r) => r.item);
+                }
+
+                // 🍑 AI 검색이 비활성화되면 문자열 검색만 반환
+                if (!state.useAISearch) {
+                    return localResults.map((r) => r.item);
+                }
+
+                // 2. AI 의미 검색
+                const aiResults = await fetchSemanticResults(query);
+
+                // AI 결과가 없으면 문자열 검색만 사용
+                if (aiResults.length === 0) {
+                    return localResults.map((r) => r.item);
+                }
+
+                // 3. 🍑 정규화 제거 - 원본 score 사용
+                // const normalizedAI = normalizeScores(aiResults); // 삭제됨
+
+                // 4. 병합 (가중 평균)
+                const alpha = 0.65; // 🍑 문자열 검색 가중치 (0.65 = 65%)
+                const mergedMap = {};
+
+                // 문자열 결과 먼저 추가
+                for (const r of localResults) {
+                    mergedMap[r.id] = {
+                        item: r.item,
+                        score: alpha * 1.0,
+                        srcText: true,
+                        srcAI: false,
+                    };
+                }
+
+                // AI 결과 병합 (🍑 원본 score 사용)
+                for (const r of aiResults) {
+                    if (mergedMap[r.id]) {
+                        // 이미 문자열로 나온 항목 - 점수 합산
+                        mergedMap[r.id].score += (1 - alpha) * r.score; // 🍑 r.normScore → r.score
+                        mergedMap[r.id].srcAI = true;
+                    } else {
+                        // AI에서만 나온 항목
+                        mergedMap[r.id] = {
+                            item: r.item,
+                            score: (1 - alpha) * r.score, // 🍑 r.normScore → r.score
+                            srcText: false,
+                            srcAI: true,
+                        };
+                    }
+                }
+
+                // 5. 점수 기준 정렬
+                const finalResults = Object.values(mergedMap)
+                    .sort((a, b) => b.score - a.score)
+                    .map((r) => r.item);
+
+                return finalResults;
+            }
+
+            // 🍑 비동기 렌더링을 위한 플래그
+            let isSearching = false;
+
+            async function render() {
+                // 검색 중 중복 호출 방지
+                if (isSearching && state.q) return;
+
+                let list;
+
+                // 검색어가 있으면 하이브리드 검색 수행
+                if (state.q) {
+                    isSearching = true;
+                    // 🍑 AI 검색 여부에 따라 다른 메시지 표시
+                    qs('#count').textContent = state.useAISearch
+                        ? '🍑 AI 검색 중...'
+                        : '🔎 검색 중...';
+
+                    try {
+                        list = await hybridSearch(state.q);
+                    } catch (error) {
+                        console.error(
+                            '🍑 하이브리드 검색 실패, 기본 검색 사용:',
+                            error
+                        );
+                        // 폴백: 기존 문자열 검색만 사용
+                        list = MODELS.filter((m) =>
+                            (m.title + (m.description || ''))
+                                .toLowerCase()
+                                .includes(state.q.toLowerCase())
+                        );
+                    } finally {
+                        isSearching = false;
+                    }
+                } else {
+                    // 검색어 없으면 전체 목록
+                    list = MODELS;
+                }
+
+                // 과목 필터 적용
+                list = list.filter(
+                    (m) => !state.subject || matchSubject(m, state.subject)
+                );
+
+                const total = list.length;
+                const pages = Math.max(1, Math.ceil(total / state.per));
+                state.page = Math.min(state.page, pages);
+                const start = (state.page - 1) * state.per;
+                const pageItems = list.slice(start, start + state.per);
+
+                // 🍑 검색 모드에 따른 결과 표시
+                const searchMode =
+                    state.q && state.useAISearch ? ' (AI 검색)' : '';
+                qs('#count').textContent = `${total}개 결과${searchMode}`;
+                qs('#results').innerHTML = pageItems.map(cardHTML).join('');
+
+                // 썸네일 클릭 → 미리보기 (★ 북마크 버튼 클릭은 무시)
+                qsa('.thumb').forEach((el) =>
+                    el.addEventListener('click', (e) => {
+                        if (e.target.closest('.bookmark-btn')) return; // 가드
+                        openModal(el.dataset.title, el.dataset.url);
+                    })
+                );
+
+                // (메인페이지) 삭제 버튼 무력화
+                qsa('.thumb-del').forEach((btn) => {
+                    btn.style.display = 'none';
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        return false;
+                    };
+                });
+
+                // ★ 북마크 버튼 보이기/동작(로그인시에만)
+                qsa('.bookmark-btn').forEach((btn) => {
+                    if (state.isLoggedIn) {
+                        btn.style.display = 'inline-grid';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation(); // 전파 차단
+                        e.preventDefault(); // 기본 동작 차단
+
+                        const card = btn.closest('.item');
+                        const id = Number(card?.dataset?.id);
+                        if (!id) return;
+
+                        if (isBookmarked(id)) {
+                            try {
+                                const res = await fetch(
+                                    `/api/bookmarks/${id}`,
+                                    {
+                                        method: 'DELETE',
+                                        credentials: 'include',
+                                    }
+                                );
+                                if (res.status === 401) {
+                                    openLoginModal();
+                                    return;
+                                }
+                                if (!res.ok) {
+                                    throw new Error('BOOKMARK_DELETE_FAILED');
+                                }
+                                state.bookmarks.delete(id);
+                                btn.classList.remove('active');
+                                btn.dataset.bookmark = '0';
+                                btn.querySelector('i').className =
+                                    'bx bx-bookmark';
+                                showToast('북마크에서 제거됨 ❌', '#e63946');
+                            } catch (err) {
+                                alert(
+                                    '북마크 해제 실패: ' +
+                                        (err.message || 'UNKNOWN')
+                                );
+                            }
+                        } else {
+                            try {
+                                const res = await fetch('/api/bookmarks', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ modelId: id }),
+                                });
+                                if (res.status === 401) {
+                                    openLoginModal();
+                                    return;
+                                }
+                                if (!res.ok) {
+                                    throw new Error('BOOKMARK_POST_FAILED');
+                                }
+                                state.bookmarks.add(id);
+                                btn.classList.add('active');
+                                btn.dataset.bookmark = '1';
+                                btn.querySelector('i').className =
+                                    'bx bxs-bookmark';
+                                showToast('북마크에 추가됨 ✅');
+                            } catch (err) {
+                                alert(
+                                    '북마크 실패: ' + (err.message || 'UNKNOWN')
+                                );
+                            }
+                        }
+                    });
+                });
+
+                // 페이저
+                const pager = qs('#pager');
+                pager.innerHTML = Array.from({ length: pages })
+                    .map(
+                        (_, i) =>
+                            `<button ${
+                                i + 1 === state.page
+                                    ? 'class="btn primary"'
+                                    : 'class="btn"'
+                            } data-page="${i + 1}">${i + 1}</button>`
+                    )
+                    .join('');
+                qsa('#pager [data-page]').forEach((b) =>
+                    b.addEventListener('click', async () => {
+                        state.page = +b.dataset.page;
+                        await render(); // 🍑 async 처리
+                    })
+                );
+            }
+
+            // 🍑 검색 (async 처리)
+            qs('#btnSearch').addEventListener('click', async () => {
+                state.q = qs('#q').value.trim();
+                state.page = 1;
+                await render();
+            });
+            qs('#q').addEventListener('keydown', async (e) => {
+                if (e.key === 'Enter') {
+                    state.q = qs('#q').value.trim();
+                    state.page = 1;
+                    await render();
+                }
+            });
+
+            // 🍑 AI 검색 토글 스위치 이벤트
+            qs('#aiSearchToggle').addEventListener('change', async (e) => {
+                state.useAISearch = e.target.checked;
+                // 검색어가 있으면 즉시 재검색
+                if (state.q) {
+                    state.page = 1;
+                    await render();
+                }
+                // 토글 상태를 localStorage에 저장
+                localStorage.setItem(
+                    'useAISearch',
+                    state.useAISearch ? 'true' : 'false'
+                );
+            });
+
+            // 🍑 과목 단일 선택 (async 처리)
+            qsa('.subject-chk').forEach((chk) => {
+                chk.addEventListener('change', async () => {
+                    if (chk.checked) {
+                        qsa('.subject-chk').forEach((other) => {
+                            if (other !== chk) other.checked = false;
+                        });
+                        state.subject = chk.value;
+                    } else {
+                        state.subject = null;
+                    }
+                    state.page = 1;
+                    await render();
+                });
+            });
+            qs('#btnClear').addEventListener('click', async () => {
+                qsa('.subject-chk').forEach((c) => (c.checked = false));
+                state.subject = null;
+                state.page = 1;
+                await render();
+            });
+
+            // 뷰어 모달 닫기
+            qs('#btnClose').addEventListener('click', closeModal);
+            qs('#modal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+            document.addEventListener(
+                'keydown',
+                (e) => {
+                    if (e.key === 'Escape') closeModal();
+                },
+                true
+            );
+
+            // ===== Login UI interactions =====
+            const signup = document.getElementById('sign-up');
+            const signin = document.getElementById('sign-in');
+            const loginin = document.getElementById('login-in');
+            const loginup = document.getElementById('login-up');
+            signup &&
+                signup.addEventListener('click', () => {
+                    loginin.classList.remove('block');
+                    loginup.classList.remove('none');
+                    loginin.classList.add('none');
+                    loginup.classList.add('block');
+                });
+            signin &&
+                signin.addEventListener('click', () => {
+                    loginin.classList.remove('none');
+                    loginup.classList.remove('block');
+                    loginin.classList.add('block');
+                    loginup.classList.add('none');
+                });
+
+            // API 래퍼
+            async function api(path, method = 'GET', body) {
+                const res = await fetch(path, {
+                    method,
+                    headers:
+                        body instanceof FormData
+                            ? undefined
+                            : { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: body
+                        ? body instanceof FormData
+                            ? body
+                            : JSON.stringify(body)
+                        : undefined,
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok)
+                    throw Object.assign(new Error(data.error || '요청 실패'), {
+                        status: res.status,
+                        data,
+                    });
+                return data;
+            }
+
+            // ★ 내 북마크 불러오기
+            async function loadMyBookmarks() {
+                state.bookmarks.clear();
+                try {
+                    // 확장 응답(객체 배열)을 원하면 ?expand=1 사용 가능. 여기서는 id 세트만 써도 충분
+                    const res = await fetch('/api/bookmarks', {
+                        credentials: 'include',
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json().catch(() => ({}));
+                    const ids = Array.isArray(data?.items)
+                        ? data.items
+                        : Array.isArray(data)
+                        ? data
+                        : [];
+                    ids.forEach((id) => state.bookmarks.add(Number(id)));
+                } catch (e) {
+                    console.warn('loadMyBookmarks fail', e);
+                }
+            }
+
+            async function refreshAuthUI() {
+                try {
+                    const me = await api('/api/auth/whoami');
+                    // 메인에서는 'admin'을 로그인으로 취급하지 않음
+                    if (me && me.user && me.user.role !== 'admin') {
+                        state.isLoggedIn = true;
+                        state.user = me.user;
+                        state.currentUser = me.user; // 🍎 챗봇 버튼 표시용
+                        await loadMyBookmarks();
+                    } else {
+                        state.isLoggedIn = false;
+                        state.user = null;
+                        state.currentUser = null; // 🍎 챗봇 버튼 숨김용
+                        state.bookmarks.clear();
+                    }
+                } catch {
+                    state.isLoggedIn = false;
+                    state.user = null;
+                    state.currentUser = null; // 🍎 챗봇 버튼 숨김용
+                    state.bookmarks.clear();
+                }
+
+                const btnAuth = document.getElementById('btnAuth');
+                const btnLogout = document.getElementById('btnLogout');
+
+                if (state.isLoggedIn) {
+                    btnAuth.textContent = '마이페이지';
+                    btnLogout.style.display = 'inline-flex';
+                } else {
+                    btnAuth.textContent = '로그인';
+                    btnLogout.style.display = 'none';
+                }
+
+                // 🍎 챗봇 버튼 표시 상태 업데이트
+                if (typeof updateChatbotVisibility === 'function') {
+                    updateChatbotVisibility();
+                }
+
+                await render(); // 🍑 상태 반영(북마크 아이콘도 반영)
+            }
+
+            // 로그인/마이페이지 이동
+            document
+                .getElementById('btnAuth')
+                .addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (state.isLoggedIn) {
+                        window.location.href = '/mypage.html';
+                    } else {
+                        openLoginModal();
+                    }
+                });
+
+            // 로그아웃 (헤더)
+            document
+                .getElementById('btnLogout')
+                .addEventListener('click', async () => {
+                    try {
+                        await api('/api/auth/logout', 'POST');
+                    } catch (e) {
+                        console.warn('logout error', e);
+                    }
+                    state.isLoggedIn = false;
+                    state.user = null;
+                    state.bookmarks.clear();
+                    ['#modalLogin', '#modalMypage', '#modal'].forEach((sel) =>
+                        qs(sel)?.classList.remove('open')
+                    );
+                    document.body.classList.remove('no-scroll');
+                    await refreshAuthUI();
+                });
+
+            // 마이페이지 안의 로그아웃
+            document
+                .getElementById('btnMypageLogout')
+                .addEventListener('click', async () => {
+                    try {
+                        await api('/api/auth/logout', 'POST');
+                    } catch {}
+                    state.isLoggedIn = false;
+                    state.user = null;
+                    state.bookmarks.clear();
+                    qs('#modalMypage').classList.remove('open');
+                    document.body.classList.remove('no-scroll');
+                    await refreshAuthUI();
+                });
+            // 마이페이지 닫기
+            document
+                .getElementById('btnCloseMypage')
+                .addEventListener('click', () => {
+                    qs('#modalMypage').classList.remove('open');
+                    document.body.classList.remove('no-scroll');
+                });
+            qs('#modalMypage').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    qs('#modalMypage').classList.remove('open');
+                    document.body.classList.remove('no-scroll');
+                }
+            });
+
+            // Sign In (메인: 관리자 차단)
+            document
+                .getElementById('login-in')
+                .addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const username = (
+                        document.getElementById('loginUsername').value || ''
+                    ).trim();
+                    const pw = (
+                        document.getElementById('loginPw').value || ''
+                    ).trim();
+                    try {
+                        await api('/api/auth/login', 'POST', {
+                            username,
+                            password: pw,
+                        });
+                        try {
+                            const me = await api('/api/auth/whoami');
+                            if (me?.user?.role === 'admin') {
+                                await api('/api/auth/logout', 'POST');
+                                return;
+                            }
+                        } catch {}
+                        await refreshAuthUI();
+                        const m = qs('#modalLogin');
+                        m.classList.remove('open');
+                        document.body.classList.remove('no-scroll');
+                    } catch (err) {
+                        alert(err.data?.error || '로그인 실패');
+                    }
+                });
+
+            // Sign Up
+            document
+                .getElementById('login-up')
+                ?.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const username = document
+                        .getElementById('signupUsername')
+                        ?.value?.trim();
+                    const email = document
+                        .getElementById('signupEmail')
+                        ?.value?.trim();
+                    const pw = document
+                        .getElementById('signupPw')
+                        ?.value?.trim();
+                    if (!username || !pw) {
+                        alert('Username/Password는 필수입니다.');
+                        return;
+                    }
+                    if (username.toLowerCase() === 'admin') {
+                        alert('이 사용자명은 사용할 수 없습니다.');
+                        return;
+                    }
+                    try {
+                        await api('/api/auth/signup', 'POST', {
+                            username,
+                            email,
+                            password: pw,
+                        });
+                        (document.getElementById('sign-in') || {}).click?.();
+                        alert('가입 완료! 이제 로그인하세요.');
+                    } catch (err) {
+                        alert(err.data?.error || '가입 실패');
+                    }
+                });
+
+            // 🍎 ============ 챗봇 기능 ============
+            function updateChatbotVisibility() {}
+
+            // 시작
+            document.getElementById('year').textContent =
+                new Date().getFullYear();
+            (async () => {
+                // 🍑 저장된 AI 검색 설정 불러오기
+                const savedAISearch = localStorage.getItem('useAISearch');
+                if (savedAISearch !== null) {
+                    state.useAISearch = savedAISearch === 'true';
+                    qs('#aiSearchToggle').checked = state.useAISearch;
+                }
+
+                await refreshAuthUI();
+                await loadModels();
+                await render(); // 🍑 async 처리
+            })();
+            // ESC로 로그인 모달 닫기
+            document.addEventListener(
+                'keydown',
+                (e) => {
+                    if (
+                        e.key === 'Escape' &&
+                        document
+                            .querySelector('#modalLogin')
+                            ?.classList.contains('open')
+                    ) {
+                        closeLoginModal();
+                    }
+                },
+                true
+            );
+
+            // 내용 바깥 클릭 시 로그인 모달 닫기
+            document
+                .getElementById('modalLogin')
+                ?.addEventListener('click', (e) => {
+                    const content = document.querySelector(
+                        '#modalLogin .login__content'
+                    );
+                    if (!content) return;
+                    if (!content.contains(e.target)) {
+                        closeLoginModal();
+                    }
+                });
+        </script>
+        <script src="chatbot.js"></script>
+    </body>
+</html>

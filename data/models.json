@@ -1,0 +1,234 @@
+[
+  {
+    "id": 26,
+    "title": "중심원리 (Central Dogma)",
+    "description": "DNA → RNA → 단백질로 이어지는 정보 흐름을 보여준다. 전사·번역 과정과 돌연변이의 영향을 시각적으로 학습할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/central-dogma-c50f58b60c984aef9fe2240fcb8d2444",
+    "subject": "biology",
+    "thumb": "/uploads/thumbs/1761723120243_lhai1e4mfi.jpg"
+  },
+  {
+    "id": 27,
+    "title": "산과 대기까지 표현한 지구 (Earth with Mountains and Atmosphere)",
+    "description": "대륙·산맥·대기층을 입체적으로 표현했다. 지형과 기류·해류의 상관관계를 지도화할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/earth-with-mountains-and-atmosphere-97ecc0ebec5d41088811e993bc764a81",
+    "subject": "geography",
+    "thumb": "/uploads/thumbs/1761723244326_jcxlcmnk11.jpg"
+  },
+  {
+    "id": 28,
+    "title": "쾨펜 기후 구분 (Koppen Climate Classification)",
+    "description": "세계 기후대를 색상으로 구분한 지도 모델이다. 위도·지형·기후의 관계를 분석하는 수업에 활용된다.",
+    "url": "https://sketchfab.com/3d-models/koppen-climate-classification-9a2e0f3963f04667be4333bac18f9c6e",
+    "subject": "geography",
+    "thumb": "/uploads/thumbs/1761723269435_hm2nbsuxysp.jpg"
+  },
+  {
+    "id": 25,
+    "title": "감수분열 도식 (Meiosis Cell Division Vector Diagram)",
+    "description": "감수 제1·2분열의 염색체 이동을 단계별로 표현한 모델이다. 교차와 재조합으로 인한 유전적 다양성을 이해할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/meiosis-cell-division-vector-diagram-f1776db946a242e8beae57b1c8934424",
+    "subject": "biology",
+    "thumb": "/uploads/thumbs/1761723080984_26tvnv231pb.jpg"
+  },
+  {
+    "id": 20,
+    "title": "지각판 충돌 (Tectonic Plates Collide)",
+    "description": "두 지각판이 충돌하며 산맥이나 해구를 형성하는 과정을 애니메이션 형태로 표현한 모델이다.",
+    "url": "https://sketchfab.com/3d-models/animated-tectonic-plates-collide-loop-4a052941a17941b39052fa1451c63928",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718627001_339gd5ga2jf.jpg"
+  },
+  {
+    "id": 2,
+    "title": "원시 행성계 원반의 화학적 성분 (The Chemical Content of Protoplanetary Disks)",
+    "description": "별 주위를 도는 가스와 먼지의 원반 형태 구조로, 행성이 형성되기 전 초기 단계의 화학 조성을 시각화한 모델이다. 행성 형성 과정의 기초를 보여준다.",
+    "url": "https://sketchfab.com/3d-models/the-chemical-content-of-protoplanetary-disks-6c7ba1ba112c408da35736f881788130",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718104069_iov13vc71h.jpg"
+  },
+  {
+    "id": 21,
+    "title": "지진과 쓰나미 (Earthquake and Tsunami)",
+    "description": "지진 발생과 그에 따른 쓰나미 전파 과정을 단계별로 시각화한 모델이다.",
+    "url": "https://sketchfab.com/3d-models/earthquake-and-tsunami-5325ba12207c4dada68345e52c35ee38",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718647881_rg1lmkwl0bh.jpg"
+  },
+  {
+    "id": 23,
+    "title": "물의 극성 (The Polarity of Water)",
+    "description": "산소·수소의 전자밀도 차이로 생기는 극성과 수소결합을 시각화한다. 극성/무극성 용매의 용해도나 끓는점 차이를 설명할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/the-polarity-of-water-960db05560484053b1c7f565b16b6c7d",
+    "subject": "",
+    "thumb": "/uploads/thumbs/1761722984133_t4khb33ljll.jpg"
+  },
+  {
+    "id": 22,
+    "title": "톰슨의 원자 모형 (Modelo Atomico de Thomson)",
+    "description": "전자가 양전하 구 안에 박혀 있다고 본 초기 원자 모형이다. 러더퍼드 실험과 비교해 보어 모형으로의 발전 과정을 이해할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/modelo-atomico-3d-3bad909df3cd4f6383b587fb1fd6732d",
+    "subject": "chemistry",
+    "thumb": "/uploads/thumbs/1761722964761_0q94x2xpnev.jpg"
+  },
+  {
+    "id": 24,
+    "title": "뇌 구조 (Human Brain Anatomy)",
+    "description": "대뇌·소뇌·뇌간 등 주요 부위를 입체적으로 볼 수 있다. 각 부위의 기능과 손상 사례를 연결해 학습할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/cerebellum-d0bbd40188c84e99a89f816615fbeeaf",
+    "subject": "biology",
+    "thumb": "/uploads/thumbs/1761723013079_x7dbqib108.jpg"
+  },
+  {
+    "id": 29,
+    "title": "위도, 경도 시각화 (Latitude and Longitude Visualised)",
+    "description": "본초자오선과 위·경도 좌표계를 3D로 보여준다. 실제 좌표를 이용한 위치·환경 분석 학습에 활용된다.",
+    "url": "https://sketchfab.com/3d-models/latitude-and-longitude-visualised-a1afb9ef20e441d6b60c211ee7f929a6",
+    "subject": "",
+    "thumb": "/uploads/thumbs/1761723293500_79kqpitjoxm.jpg"
+  },
+  {
+    "id": 19,
+    "title": "지각판 (Tectonic Plate)",
+    "description": "지구의 표면을 구성하는 거대한 지각판의 분포와 구조를 시각적으로 표현한 모델이다.",
+    "url": "https://sketchfab.com/3d-models/tectonic-plate-4831733077564ee29ddfc3ea42a842f2",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718606072_1cwhpet08xe.jpg"
+  },
+  {
+    "id": 18,
+    "title": "퇴적암·풍화·잠식을 나타내는 조지아의 동굴 수도원 (Shio-Mgvime Cave Monastery)",
+    "description": "지질 작용에 의해 형성된 동굴과 침식 지형을 보여주는 모델로, 풍화와 침식의 자연 과정을 학습하기 좋다.",
+    "url": "https://sketchfab.com/3d-models/shio-mgvime-cave-monastery-wall-cd6e6af90698474f96c11579f5086ced",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718559884_q3a707kwfr.jpg"
+  },
+  {
+    "id": 17,
+    "title": "물의 순환 (Water Cycle)",
+    "description": "증발, 응결, 강수, 지하수 순환 등 물의 순환 과정을 입체적으로 표현한 모델이다.",
+    "url": "https://sketchfab.com/3d-models/water-cycle-35da9d322cbe406bbf7faf38307a20c2",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718528744_ohgaaq2oyui.jpg"
+  },
+  {
+    "id": 16,
+    "title": "홍적세 강 시스템 (Pleistocene River System)",
+    "description": "홍적세 시기의 강 시스템과 하천 퇴적 구조를 보여주는 모델로, 과거 기후 변화와 지형 형성 과정을 시각적으로 이해할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/pleistocene-river-system-e6dc2daa5549483a873b1d5b8db8a94d",
+    "subject": "geography",
+    "thumb": "/uploads/thumbs/1761718503946_745i6b77htj.jpg"
+  },
+  {
+    "id": 15,
+    "title": "변성퇴적암 및 화성 관입암 (Metasediments and Igneous Intrusions)",
+    "description": "아일랜드 지역의 변성퇴적암과 화성암이 교차하는 지질 구조를 나타내며, 암석의 형성과정과 지각 변화를 보여준다.",
+    "url": "https://sketchfab.com/3d-models/metasediments-igneous-intrusions-carlingford-c208cb340b2640618367d7c6820363b0",
+    "subject": "geography",
+    "thumb": "/uploads/thumbs/1761718483895_ul776f8z4q.jpg"
+  },
+  {
+    "id": 14,
+    "title": "암석 지형 산 (Mountain)",
+    "description": "지각의 융기나 침식 작용으로 형성된 산의 지형 구조를 보여주는 모델이다.",
+    "url": "https://sketchfab.com/3d-models/mountain-d7829c144aee4b6fa09e66e9d1891913",
+    "subject": "geography",
+    "thumb": "/uploads/thumbs/1761718447739_buh3wfngrnk.jpg"
+  },
+  {
+    "id": 13,
+    "title": "전자기파 (Electromagnetic Wave)",
+    "description": "전기장과 자기장이 서로 직각으로 진동하며 전파되는 전자기파의 구조를 사인·코사인 형태로 시각화한 모델이다.",
+    "url": "https://sketchfab.com/3d-models/behaviour-of-an-electromagnetic-wave-c1dd281a75294c56b4d9200c83443c90",
+    "subject": "physics",
+    "thumb": "/uploads/thumbs/1761718425725_29igm0b24qk.jpg"
+  },
+  {
+    "id": 12,
+    "title": "직류 모터 발전기 (DC Motor/Generator)",
+    "description": "직류 전원을 이용한 모터 및 발전기의 구조와 작동 원리를 한눈에 볼 수 있는 모델이다.",
+    "url": "https://sketchfab.com/3d-models/dc-motor-generator-d9454ef2fde9415fbcb3aaeedb8f4880",
+    "subject": "physics",
+    "thumb": "/uploads/thumbs/1761718398387_s95tbs3erv.jpg"
+  },
+  {
+    "id": 11,
+    "title": "전기 모터 (Electric Motor)",
+    "description": "전류가 흐르는 코일이 자기장 속에서 회전하는 원리를 기반으로 하는 전기 모터의 내부 구조를 보여준다.",
+    "url": "https://sketchfab.com/3d-models/electric-motor-229adf4360e8466b88292c3c0571cbf8",
+    "subject": "physics",
+    "thumb": "/uploads/thumbs/1761718377065_ldf0ketdmo.jpg"
+  },
+  {
+    "id": 10,
+    "title": "와전류 (Eddy Current)",
+    "description": "도체 내에서 자기장 변화에 의해 발생하는 순환 전류 현상을 시각화한 모델이다. 전자기 유도와 에너지 손실의 개념을 설명한다.",
+    "url": "https://sketchfab.com/3d-models/eddy-current-c5f8170bdb6c445994cfc387e9a4a6f8",
+    "subject": "physics",
+    "thumb": "/uploads/thumbs/1761718352918_sz2e5jglo1.jpg"
+  },
+  {
+    "id": 9,
+    "title": "코일 이동 (Moving Coil Galvanometer)",
+    "description": "코일이 자기장 안에서 회전하며 전류의 세기를 측정하는 장치의 구조를 보여주는 모델이다. 전류와 자기장의 관계를 이해할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/moving-coil-galvanometer-physics-445413d65bd34d3f8b94f5a3b4681ed7",
+    "subject": "physics",
+    "thumb": "/uploads/thumbs/1761718330632_5sbaamx2wzs.jpg"
+  },
+  {
+    "id": 8,
+    "title": "자기장 (Magnetic Field)",
+    "description": "자석 주위에 형성되는 자기력선의 방향과 세기를 시각화한 모델로, 자기장의 공간적 분포를 이해하는 데 도움이 된다.",
+    "url": "https://sketchfab.com/3d-models/campo-magnetico-a71643cfcabf42619748237df807f666",
+    "subject": "physics",
+    "thumb": "/uploads/thumbs/1761718299881_q3gfrrzy6n.jpg"
+  },
+  {
+    "id": 7,
+    "title": "이중 공유 결합 (Double Covalent Bond)",
+    "description": "두 원자가 두 쌍의 전자를 공유하는 이중 결합의 구조를 시각화한 모델이다. 산소 분자(O₂)나 이산화탄소(CO₂)와 같은 물질의 결합 특성을 이해하는 데 도움이 된다.",
+    "url": "https://sketchfab.com/3d-models/double-covalent-bond-29aaaf37b913425b86af8f63c7d8bfc8",
+    "subject": "chemistry",
+    "thumb": "/uploads/thumbs/1761718277104_ffgd3jogky.jpg"
+  },
+  {
+    "id": 6,
+    "title": "단일 공유 결합 (Single Covalent Bond)",
+    "description": "두 원자가 한 쌍의 전자를 공유하여 결합하는 단일 공유 결합의 구조를 보여주는 모델이다. 대표적으로 H₂, Cl₂ 등의 분자에서 나타나는 결합 형태이다.",
+    "url": "https://sketchfab.com/3d-models/single-covalent-bond-cb22e0be4579402e8ae27b6b69e200ff",
+    "subject": "chemistry",
+    "thumb": "/uploads/thumbs/1761718241284_dkuy94ez78n.jpg"
+  },
+  {
+    "id": 5,
+    "title": "Salt Dissolving in Water",
+    "description": "이온 결합을 가진 염화나트륨(NaCl)이 물에 녹으면서 Na⁺와 Cl⁻ 이온으로 분리되는 과정을 시각화한 모델이다. 물 분자의 극성과 이온 간 상호작용을 이해하는 데 유용하다.",
+    "url": "https://sketchfab.com/3d-models/salt-dissolving-in-water-246f79155c424e4ba22c9ae50532a81d",
+    "subject": "chemistry",
+    "thumb": "/uploads/thumbs/1761718210515_tnuw2wrkgis.jpg"
+  },
+  {
+    "id": 4,
+    "title": "주기율표 (Periodic Table)",
+    "description": "원소의 번호, 기호, 주기 및 족에 따른 배열을 3D 형태로 표현한 주기율표이다. 원소 간의 규칙성과 원자 구조의 주기성을 직관적으로 이해할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/the-3d-periodic-table-09cd9683c4244eba9167a083c7298804",
+    "subject": "chemistry",
+    "thumb": "/uploads/thumbs/1761718176700_xpy0e7rv2m.jpg"
+  },
+  {
+    "id": 3,
+    "title": "지구 (Earth)",
+    "description": "지구의 구체 형태를 표현한 3D 모델로, 대륙과 해양의 분포, 자전축, 기후대 등을 이해하는 데 활용할 수 있다.",
+    "url": "https://sketchfab.com/3d-models/earth-globe-98d2b04d46474bafb4250cc75dc583b3",
+    "subject": "earth",
+    "thumb": "/uploads/thumbs/1761718131467_ff405eyr2lv.jpg"
+  },
+  {
+    "id": 1,
+    "title": "미토콘드리아 (Mitochondria)",
+    "description": "세포의 에너지 공장이라 불리는 미토콘드리아의 내부 구조(이중막, 크리스타, 기질 등)를 단면으로 보여주는 모델이다. ATP 생성이 이루어지는 장소로, 세포 호흡 과정의 핵심 기관이다.",
+    "url": "https://sketchfab.com/3d-models/mitochondria-cross-section-anatomy-acc7d71759a1441e8409ebb31e3c3c0d",
+    "subject": "biology",
+    "thumb": "/uploads/thumbs/1761718051913_ay25knc1afl.jpg"
+  }
+]

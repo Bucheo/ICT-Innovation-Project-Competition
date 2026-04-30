@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>3D Learning Atlas</title>
+        <style>
+            :root {
+                --ink: #f8fafc;
+                --muted: #b9c3d3;
+                --panel: rgba(10, 15, 24, 0.72);
+                --line: rgba(255, 255, 255, 0.16);
+                --red: #bc2c3c;
+                --blue: #4e77ba;
+                --green: #38b985;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                background: #080b11;
+                color: var(--ink);
+                font: 15px/1.6 Pretendard, system-ui, -apple-system, Segoe UI,
+                    Roboto, Noto Sans KR, sans-serif;
+                overflow-x: hidden;
+            }
+
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            .topbar {
+                position: fixed;
+                inset: 0 0 auto 0;
+                z-index: 20;
+                height: 66px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 18px;
+                padding: 0 clamp(18px, 4vw, 56px);
+                background: rgba(8, 11, 17, 0.72);
+                border-bottom: 1px solid var(--line);
+                backdrop-filter: blur(14px);
+            }
+
+            .brand {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 900;
+                letter-spacing: 0;
+            }
+
+            .brand img {
+                width: 34px;
+                height: 34px;
+                object-fit: contain;
+            }
+
+            .nav {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                color: var(--muted);
+                font-size: 0.92rem;
+                font-weight: 700;
+            }
+
+            .nav a:hover {
+                color: #fff;
+            }
+
+            .hero {
+                position: relative;
+                min-height: 88vh;
+                padding: 132px clamp(20px, 5vw, 76px) 54px;
+                display: grid;
+                grid-template-columns: minmax(300px, 0.88fr) minmax(380px, 1.12fr);
+                align-items: center;
+                gap: clamp(28px, 5vw, 70px);
+                overflow: hidden;
+            }
+
+            .hero::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background-image: url('/uploads/thumbs/1761723244326_jcxlcmnk11.jpg');
+                background-size: cover;
+                background-position: center;
+                opacity: 0.34;
+                filter: saturate(1.05) contrast(1.06);
+                transform: scale(1.03);
+            }
+
+            .hero::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: rgba(6, 9, 15, 0.62);
+            }
+
+            .hero-copy,
+            .model-stage {
+                position: relative;
+                z-index: 2;
+            }
+
+            .eyebrow {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: #d8ecff;
+                font-size: 0.86rem;
+                font-weight: 800;
+                margin-bottom: 18px;
+            }
+
+            .eyebrow::before {
+                content: '';
+                width: 34px;
+                height: 2px;
+                background: var(--green);
+            }
+
+            h1 {
+                margin: 0;
+                max-width: 760px;
+                font-size: clamp(3rem, 8vw, 6.9rem);
+                line-height: 0.94;
+                letter-spacing: 0;
+                font-weight: 950;
+            }
+
+            .lead {
+                max-width: 620px;
+                margin: 24px 0 0;
+                color: #d6dde8;
+                font-size: clamp(1.05rem, 2vw, 1.24rem);
+            }
+
+            .actions {
+                margin-top: 34px;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .primary {
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 20px;
+                border-radius: 8px;
+                background: #f8fafc;
+                color: #0d1320;
+                font-weight: 900;
+                box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+                transition: transform 0.18s, background 0.18s;
+            }
+
+            .primary:hover {
+                transform: translateY(-2px);
+                background: #eaf1fb;
+            }
+
+            .secondary {
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                padding: 0 16px;
+                border-radius: 8px;
+                border: 1px solid var(--line);
+                color: #e6edf7;
+                font-weight: 800;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .model-stage {
+                min-height: 560px;
+                perspective: 1100px;
+            }
+
+            .model-wall {
+                position: absolute;
+                inset: 0;
+                transform: rotateX(58deg) rotateZ(-30deg) translate3d(20px, 0, 0);
+                transform-style: preserve-3d;
+            }
+
+            .tile {
+                position: absolute;
+                width: 220px;
+                aspect-ratio: 1.22 / 1;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                overflow: hidden;
+                background: #111827;
+                box-shadow: 0 22px 38px rgba(0, 0, 0, 0.38);
+                transform: translateZ(var(--z));
+                animation: hoverTile 5.8s ease-in-out infinite;
+                animation-delay: var(--delay);
+            }
+
+            .tile img {
+                width: 100%;
+                height: 100%;
+                display: block;
+                object-fit: cover;
+            }
+
+            .tile span {
+                position: absolute;
+                left: 10px;
+                bottom: 9px;
+                padding: 5px 8px;
+                border-radius: 6px;
+                background: rgba(5, 9, 16, 0.78);
+                color: #fff;
+                font-size: 0.78rem;
+                font-weight: 800;
+            }
+
+            .t1 {
+                left: 20px;
+                top: 30px;
+                --z: 42px;
+                --delay: 0s;
+            }
+            .t2 {
+                left: 250px;
+                top: 12px;
+                --z: 90px;
+                --delay: -1.4s;
+            }
+            .t3 {
+                left: 480px;
+                top: 42px;
+                --z: 18px;
+                --delay: -2.1s;
+            }
+            .t4 {
+                left: 92px;
+                top: 214px;
+                --z: 120px;
+                --delay: -0.8s;
+            }
+            .t5 {
+                left: 324px;
+                top: 204px;
+                --z: 58px;
+                --delay: -2.8s;
+            }
+            .t6 {
+                left: 550px;
+                top: 232px;
+                --z: 104px;
+                --delay: -3.5s;
+            }
+            .t7 {
+                left: 210px;
+                top: 396px;
+                --z: 28px;
+                --delay: -4.3s;
+            }
+            .t8 {
+                left: 442px;
+                top: 404px;
+                --z: 140px;
+                --delay: -1.9s;
+            }
+
+            @keyframes hoverTile {
+                0%,
+                100% {
+                    translate: 0 0;
+                }
+                50% {
+                    translate: 0 -12px;
+                }
+            }
+
+            .stats {
+                position: absolute;
+                right: 16px;
+                bottom: 16px;
+                z-index: 3;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1px;
+                overflow: hidden;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                background: var(--line);
+                box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+            }
+
+            .stat {
+                min-width: 116px;
+                padding: 12px 14px;
+                background: var(--panel);
+                backdrop-filter: blur(10px);
+            }
+
+            .stat strong {
+                display: block;
+                font-size: 1.32rem;
+            }
+
+            .stat span {
+                color: var(--muted);
+                font-size: 0.78rem;
+                font-weight: 800;
+            }
+
+            .below {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 1px;
+                border-top: 1px solid var(--line);
+                background: var(--line);
+            }
+
+            .feature {
+                min-height: 150px;
+                padding: 24px clamp(20px, 4vw, 42px);
+                background: #0d1320;
+            }
+
+            .feature:nth-child(2) {
+                background: #111827;
+            }
+
+            .feature h2 {
+                margin: 0 0 8px;
+                font-size: 1.06rem;
+            }
+
+            .feature p {
+                margin: 0;
+                color: var(--muted);
+            }
+
+            @media (max-width: 980px) {
+                .hero {
+                    grid-template-columns: 1fr;
+                    min-height: auto;
+                    padding-top: 116px;
+                }
+
+                .model-stage {
+                    min-height: 430px;
+                    overflow: hidden;
+                }
+
+                .model-wall {
+                    transform: scale(0.82) rotateX(58deg) rotateZ(-30deg)
+                        translate3d(-80px, -40px, 0);
+                    transform-origin: top left;
+                }
+            }
+
+            @media (max-width: 680px) {
+                .nav {
+                    display: none;
+                }
+
+                .hero {
+                    padding-left: 18px;
+                    padding-right: 18px;
+                }
+
+                .model-stage {
+                    min-height: 330px;
+                }
+
+                .model-wall {
+                    transform: scale(0.62) rotateX(58deg) rotateZ(-30deg)
+                        translate3d(-110px, -70px, 0);
+                }
+
+                .stats,
+                .below {
+                    grid-template-columns: 1fr;
+                }
+
+                .stats {
+                    left: 18px;
+                    right: 18px;
+                }
+
+                .stat {
+                    min-width: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header class="topbar">
+            <a class="brand" href="/intro.html">
+                <img src="/images/invert_logo.png" alt="" />
+                <span>3D Learning Atlas</span>
+            </a>
+            <nav class="nav" aria-label="intro navigation">
+                <a href="/index.html">Explore</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="hero-copy">
+                    <div class="eyebrow">Interactive science models</div>
+                    <h1>3D로 여는 과학 수업</h1>
+                    <p class="lead">
+                        생명과학, 지구과학, 화학, 물리 개념을 실제 3D 모델처럼
+                        둘러보고, 질문하고, 북마크하며 학습 흐름을 이어갑니다.
+                    </p>
+                    <div class="actions">
+                        <a class="primary" href="/index.html">모델 탐색 시작</a>
+                    </div>
+                </div>
+
+                <div class="model-stage" aria-hidden="true">
+                    <div class="model-wall">
+                        <div class="tile t1">
+                            <img
+                                src="/uploads/thumbs/1761723244326_jcxlcmnk11.jpg"
+                                alt=""
+                            />
+                            <span>Earth</span>
+                        </div>
+                        <div class="tile t2">
+                            <img
+                                src="/uploads/thumbs/1761723120243_lhai1e4mfi.jpg"
+                                alt=""
+                            />
+                            <span>DNA</span>
+                        </div>
+                        <div class="tile t3">
+                            <img
+                                src="/uploads/thumbs/1761723269435_hm2nbsuxysp.jpg"
+                                alt=""
+                            />
+                            <span>Climate</span>
+                        </div>
+                        <div class="tile t4">
+                            <img
+                                src="/uploads/thumbs/1761718627001_339gd5ga2jf.jpg"
+                                alt=""
+                            />
+                            <span>Plate</span>
+                        </div>
+                        <div class="tile t5">
+                            <img
+                                src="/uploads/thumbs/1761722984133_t4khb33ljll.jpg"
+                                alt=""
+                            />
+                            <span>Water</span>
+                        </div>
+                        <div class="tile t6">
+                            <img
+                                src="/uploads/thumbs/1761722964761_0q94x2xpnev.jpg"
+                                alt=""
+                            />
+                            <span>Atom</span>
+                        </div>
+                        <div class="tile t7">
+                            <img
+                                src="/uploads/thumbs/1761723013079_x7dbqib108.jpg"
+                                alt=""
+                            />
+                            <span>Brain</span>
+                        </div>
+                        <div class="tile t8">
+                            <img
+                                src="/uploads/thumbs/1761718528744_ohgaaq2oyui.jpg"
+                                alt=""
+                            />
+                            <span>Cycle</span>
+                        </div>
+                    </div>
+                    <div class="stats">
+                        <div class="stat">
+                            <strong>29+</strong>
+                            <span>3D models</span>
+                        </div>
+                        <div class="stat">
+                            <strong>AI</strong>
+                            <span>learning chat</span>
+                        </div>
+                        <div class="stat">
+                            <strong>Live</strong>
+                            <span>class insight</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="below">
+                <article class="feature">
+                    <h2>몰입형 모델 탐색</h2>
+                    <p>과목별 3D 자료를 빠르게 찾고 바로 미리볼 수 있습니다.</p>
+                </article>
+                <article class="feature">
+                    <h2>학습 도우미 챗봇</h2>
+                    <p>개념 질문과 퀴즈 요청을 같은 화면에서 이어갈 수 있습니다.</p>
+                </article>
+                <article class="feature">
+                    <h2>교사용 흐름 분석</h2>
+                    <p>질문, 북마크, 노트를 바탕으로 수업 관심도를 확인합니다.</p>
+                </article>
+            </section>
+        </main>
+    </body>
+</html>

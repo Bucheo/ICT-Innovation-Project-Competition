@@ -1,0 +1,7 @@
+[
+  { "id": "earth_science", "label": "지구과학" },
+  { "id": "life_science",  "label": "생명과학" },
+  { "id": "physics",       "label": "물리" },
+  { "id": "chemistry",     "label": "화학" },
+  { "id": "geography",     "label": "지리" }
+]
