@@ -575,8 +575,10 @@ app.post('/api/chat', requireLogin, async (req, res) => {
 app.post('/api/notes', requireLogin, async (req, res) => {
     try {
         const { title, content, subject = '' } = req.body || {};
-        if (!title || !content) {
-            return res.status(400).json({ error: '제목과 내용이 필요합니다' });
+        const cleanTitle = String(title || '').trim();
+        const cleanContent = String(content || '').trim();
+        if (!cleanTitle || !cleanContent) {
+            return res.status(400).json({ error: 'TITLE_AND_CONTENT_REQUIRED' });
         }
 
         const uid = await getUserId(req.me.username);
@@ -584,7 +586,7 @@ app.post('/api/notes', requireLogin, async (req, res) => {
 
         db.run(
             `INSERT INTO notes (user_id, title, content, subject) VALUES (?, ?, ?, ?)`,
-            [uid, String(title), String(content), String(subject || '')],
+            [uid, cleanTitle, cleanContent, String(subject || '')],
             function (err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ ok: true, id: this.lastID });
@@ -592,6 +594,229 @@ app.post('/api/notes', requireLogin, async (req, res) => {
         );
     } catch {
         res.status(500).json({ error: 'SERVER_ERROR' });
+    }
+});
+
+app.get('/api/notes', requireLogin, async (req, res) => {
+    try {
+        const uid = await getUserId(req.me.username);
+        if (!uid) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+        const rows = await dbAll(
+            `SELECT id, title, content, subject, created_at
+               FROM notes
+              WHERE user_id=?
+              ORDER BY id DESC`,
+            [uid]
+        );
+        res.json({ items: rows });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'SERVER_ERROR' });
+    }
+});
+
+app.put('/api/notes/:id', requireLogin, async (req, res) => {
+    try {
+        const uid = await getUserId(req.me.username);
+        if (!uid) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+        const id = Number(req.params.id);
+        const { title, content, subject = '' } = req.body || {};
+        const cleanTitle = String(title || '').trim();
+        const cleanContent = String(content || '').trim();
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'INVALID_NOTE_ID' });
+        }
+        if (!cleanTitle || !cleanContent) {
+            return res.status(400).json({ error: 'TITLE_AND_CONTENT_REQUIRED' });
+        }
+
+        const result = await dbRun(
+            `UPDATE notes
+                SET title=?, content=?, subject=?
+              WHERE id=? AND user_id=?`,
+            [cleanTitle, cleanContent, String(subject || ''), id, uid]
+        );
+
+        if (!result.changes) return res.status(404).json({ error: 'NOTE_NOT_FOUND' });
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'SERVER_ERROR' });
+    }
+});
+
+app.delete('/api/notes/:id', requireLogin, async (req, res) => {
+    try {
+        const uid = await getUserId(req.me.username);
+        if (!uid) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'INVALID_NOTE_ID' });
+        }
+
+        const result = await dbRun(`DELETE FROM notes WHERE id=? AND user_id=?`, [
+            id,
+            uid,
+        ]);
+        if (!result.changes) return res.status(404).json({ error: 'NOTE_NOT_FOUND' });
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'SERVER_ERROR' });
+    }
+});
+
+app.post('/api/notes/generate', requireLogin, async (req, res) => {
+    try {
+        const uid = await getUserId(req.me.username);
+        if (!uid) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+        const selectedIds = [
+            ...new Set(
+                ((req.body || {}).modelIds || [])
+                    .map((id) => Number(id))
+                    .filter((id) => Number.isInteger(id) && id > 0)
+            ),
+        ];
+        if (!selectedIds.length) {
+            return res.status(400).json({ error: 'BOOKMARK_SELECTION_REQUIRED' });
+        }
+
+        const models = readJson(MODELS_JSON, []);
+        const placeholders = selectedIds.map(() => '?').join(',');
+        const bookmarkRows = await dbAll(
+            `SELECT model_id, created_at
+               FROM bookmarks
+              WHERE user_id=? AND model_id IN (${placeholders})
+              ORDER BY id DESC`,
+            [uid, ...selectedIds]
+        );
+        if (!bookmarkRows.length) {
+            return res.status(400).json({ error: 'SELECTED_BOOKMARK_NOT_FOUND' });
+        }
+
+        const chatRows = await dbAll(
+            `SELECT message, subject, with_quiz, created_at
+               FROM chat_logs
+              WHERE user_id=?
+              ORDER BY id DESC
+              LIMIT 80`,
+            [uid]
+        );
+
+        const bookmarks = bookmarkRows
+            .map((row) => {
+                const model = models.find((m) => Number(m.id) === Number(row.model_id));
+                if (!model) return null;
+                return {
+                    title: model.title,
+                    description: model.description || '',
+                    subject: model.subject || '',
+                };
+            })
+            .filter(Boolean);
+        const selectedSubjects = new Set(
+            bookmarks.map((model) => model.subject).filter(Boolean)
+        );
+        const keywordSource = bookmarks
+            .map((model) => `${model.title || ''} ${model.description || ''}`)
+            .join(' ');
+        const keywords = [
+            ...new Set(
+                keywordSource
+                    .toLowerCase()
+                    .replace(/[^\w가-힣\s]/g, ' ')
+                    .split(/\s+/)
+                    .map((word) => word.trim())
+                    .filter((word) => word.length >= 2)
+            ),
+        ].slice(0, 24);
+        const relatedChatRows = chatRows
+            .filter((row) => {
+                const message = String(row.message || '').toLowerCase();
+                return (
+                    (row.subject && selectedSubjects.has(row.subject)) ||
+                    keywords.some((keyword) => message.includes(keyword))
+                );
+            })
+            .slice(0, 12);
+
+        const titleBase =
+            bookmarks.length === 1
+                ? bookmarks[0].title
+                : `${bookmarks[0].title} 외 ${bookmarks.length - 1}개`;
+        const title = `AI 학습 노트 - ${titleBase}`;
+        const fallback = [
+            '# 핵심 개념',
+            bookmarks.length
+                ? bookmarks
+                      .map((m) => `- ${m.title}: ${m.description || '북마크한 개념'}`)
+                      .join('\n')
+                : '- 아직 북마크한 개념이 없습니다.',
+            '',
+            '# 최근 질문에서 정리할 내용',
+            relatedChatRows.length
+                ? relatedChatRows.map((row) => `- ${row.message}`).join('\n')
+                : '- 선택한 개념과 직접 관련된 챗봇 질문 기록이 아직 없습니다.',
+            '',
+            '# 다시 확인할 개념',
+            relatedChatRows.some((row) => row.with_quiz)
+                ? relatedChatRows
+                      .filter((row) => row.with_quiz)
+                      .map((row) => `- 퀴즈로 확인 요청: ${row.message}`)
+                      .join('\n')
+                : '- 선택한 개념과 관련된 퀴즈 요청 기록이 생기면 이곳에 복습 후보가 정리됩니다.',
+        ].join('\n');
+
+        let content = fallback;
+        let aiUsed = false;
+
+        if (bookmarks.length || relatedChatRows.length) {
+            try {
+                const prompt = [
+                    '사용자의 개인 학습 노트를 한국어로 작성해 주세요.',
+                    '사용자가 선택한 3D 학습 개념만 중심으로 정리합니다.',
+                    '챗봇 대화는 선택한 개념과 관련 있는 질문만 참고 자료로 사용합니다.',
+                    '형식은 다음 섹션을 포함하세요: 핵심 개념, 질문으로 보강한 내용, 다시 확인할 개념, 사용자가 직접 고칠 부분.',
+                    '너무 길지 않게 bullet 위주로 작성하고, 확인되지 않은 오답은 "다시 확인할 개념"으로 표현하세요.',
+                    '',
+                    `선택한 북마크: ${JSON.stringify(bookmarks)}`,
+                    `관련 챗봇 질문: ${JSON.stringify(relatedChatRows)}`,
+                ].join('\n');
+
+                const response = await axios.post(
+                    `${PYTHON_AI_SERVER}/chat`,
+                    { message: prompt, subject: '', with_quiz: false },
+                    { timeout: 120000, httpAgent: httpAgentV4 }
+                );
+                if (response.data?.answer) {
+                    content = String(response.data.answer).trim();
+                    aiUsed = true;
+                }
+            } catch (err) {
+                console.warn('[notes/generate] AI fallback:', err.message);
+            }
+        }
+
+        const result = await dbRun(
+            `INSERT INTO notes (user_id, title, content, subject) VALUES (?, ?, ?, ?)`,
+            [uid, title, content, bookmarks[0]?.subject || '']
+        );
+
+        res.json({
+            ok: true,
+            aiUsed,
+            item: {
+                id: result.lastID,
+                title,
+                content,
+                subject: bookmarks[0]?.subject || '',
+                created_at: new Date().toISOString(),
+            },
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'SERVER_ERROR' });
     }
 });
 
