@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const sqlite3 = require\\('sqlite3'\\).verbose\\(\\); const db = new sqlite3.Database\\('data/app.db'\\); db.run\\('PRAGMA wal_checkpoint\\(TRUNCATE\\)', function\\(err\\) { if\\(err\\) { console.error\\('ERROR:', err.message\\); } else { console.log\\('WAL checkpoint OK, changes:', this.changes\\); } db.close\\(\\); }\\);\")"
+    ]
+  }
+}

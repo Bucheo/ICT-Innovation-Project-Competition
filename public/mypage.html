@@ -354,6 +354,105 @@
         transition: opacity 0.3s, transform 0.3s;
         z-index: 9999;
       }
+
+      /* ── AI 노트 피드백 패널 ── */
+      .feedback-panel {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        padding: 18px;
+        margin-top: 14px;
+      }
+      .feedback-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .score-ring {
+        width: 64px; height: 64px;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+      .score-ring .score-text {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 1rem; transform: rotate(0deg);
+      }
+      .score-label { font-weight: 700; font-size: 0.95rem; color: #1d4ed8; }
+      .feedback-body { font-size: 0.9rem; line-height: 1.7; color: #374151; }
+      .feedback-list { margin: 8px 0 0; padding: 0; list-style: none; }
+      .feedback-list li { display: flex; gap: 6px; margin-bottom: 4px; }
+      .feedback-list li::before { flex-shrink: 0; font-size: 1rem; }
+      .feedback-list.strengths    li::before { content: '✅'; }
+      .feedback-list.improvements li::before { content: '🔧'; }
+      .feedback-section-title { font-weight: 700; margin: 10px 0 4px; font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
+      /* ── 통계 대시보드 ── */
+      .stats-bar {
+        display: flex; gap: 12px; flex-wrap: wrap;
+        background: #fff; border: 1px solid var(--bd);
+        border-radius: 10px; padding: 14px 18px;
+        margin-bottom: 14px;
+      }
+      .stat-item { flex: 1; min-width: 80px; text-align: center; }
+      .stat-num  { font-size: 1.5rem; font-weight: 900; color: var(--accent); line-height: 1; }
+      .stat-lbl  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+      /* ── 로딩 스피너 ── */
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spin { animation: spin .8s linear infinite; display: inline-block; }
+      /* ── 작업 큐 배지 ── */
+      .job-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #fef3c7; border: 1px solid #fde68a;
+        border-radius: 8px; padding: 6px 12px;
+        font-size: 0.85rem; color: #92400e; font-weight: 600;
+        cursor: default;
+      }
+      /* ── Rate-limit 경고 ── */
+      .rate-alert {
+        background: #fef2f2; border: 1px solid #fca5a5;
+        border-radius: 8px; padding: 10px 14px;
+        font-size: 0.87rem; color: #b91c1c;
+        margin-top: 10px; display: none;
+      }
+      /* ── 노트 카드 점수 뱃지 ── */
+      .score-badge {
+        display: inline-flex; align-items: center; gap: 3px;
+        font-size: 0.75rem; font-weight: 700;
+        padding: 2px 7px; border-radius: 99px;
+        background: #dbeafe; color: #1d4ed8;
+        margin-left: 6px;
+      }
+      /* ── 탭 카운트 뱃지 ── */
+      .tab-badge {
+        background: #e0e7ff; color: #3730a3;
+        border-radius: 99px; padding: 1px 7px;
+        font-size: 0.78rem; font-weight: 700;
+        margin-left: 4px;
+      }
+      /* ── 약점/관심사 태그 ── */
+      .analysis-tag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 99px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.6;
+      }
+      .tag-weak     { background: #fee2e2; color: #b91c1c; }
+      .tag-interest { background: #dbeafe; color: #1d4ed8; }
+
+      /* ── async 모드 poll 상태 표시 ── */
+      .async-status {
+        display: flex; align-items: center; gap: 8px;
+        padding: 12px; background: #f0f9ff;
+        border: 1px solid #bae6fd; border-radius: 8px;
+        font-size: 0.88rem; color: #0369a1;
+        margin-top: 12px; display: none;
+      }
     </style>
   </head>
   <body>
@@ -388,6 +487,25 @@
       </section>
 
       <section class="panel" id="notesPanel">
+        <!-- 학습 통계 대시보드 -->
+        <div class="stats-bar" id="statsBar" style="display:none">
+          <div class="stat-item">
+            <div class="stat-num" id="statNotes">0</div>
+            <div class="stat-lbl">총 노트</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="statChats">0</div>
+            <div class="stat-lbl">챗봇 질문</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="statScore">-</div>
+            <div class="stat-lbl">평균 점수</div>
+          </div>
+          <div class="stat-item" style="flex:2;text-align:left;padding-left:12px">
+            <div style="font-size:0.8rem;color:var(--muted);font-weight:600">최근 피드백</div>
+            <div id="statRecentFeedback" style="font-size:0.85rem;color:#374151">-</div>
+          </div>
+        </div>
         <div class="toolbar">
           <div class="muted">
             AI가 만든 초안을 저장한 뒤 언제든지 직접 고칠 수 있습니다.
@@ -400,6 +518,16 @@
               <i class="bx bx-sparkles"></i>AI 노트 만들기
             </button>
           </div>
+        </div>
+        <!-- Rate-limit 경고 -->
+        <div class="rate-alert" id="rateAlert">
+          <i class="bx bx-error-circle"></i>
+          <span id="rateAlertMsg">요청이 너무 많습니다. 잠시 후 다시 시도하세요.</span>
+        </div>
+        <!-- 비동기 작업 진행 표시 -->
+        <div class="async-status" id="asyncStatus" style="display:none">
+          <i class="bx bx-loader-alt spin"></i>
+          <span id="asyncStatusMsg">AI 노트를 생성하고 있습니다…</span>
         </div>
 
         <div class="notes-layout">
@@ -431,11 +559,54 @@
               <button class="btn danger" id="btnDeleteNote" type="button">
                 <i class="bx bx-trash"></i>삭제
               </button>
+              <button class="btn" id="btnFeedback" type="button" style="display:none">
+                <i class="bx bx-analyse"></i>AI 피드백
+              </button>
               <button class="btn primary" type="submit">
                 <i class="bx bx-save"></i>저장
               </button>
             </div>
           </form>
+          <!-- AI 피드백 패널 -->
+          <div class="feedback-panel" id="feedbackPanel" style="display:none">
+            <div class="feedback-header">
+              <div>
+                <div class="score-label"><i class="bx bx-bar-chart-alt-2"></i> AI 학습 피드백</div>
+                <div class="muted" style="font-size:0.82rem;margin-top:2px" id="feedbackMeta"></div>
+              </div>
+              <div class="score-ring" id="scoreRing">
+                <svg viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="#dbeafe" stroke-width="8"/>
+                  <circle id="scoreArc" cx="32" cy="32" r="26" fill="none" stroke="#2563eb" stroke-width="8"
+                    stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round"
+                    style="transition:stroke-dashoffset 1s ease"/>
+                </svg>
+                <div class="score-text" id="scoreText">-</div>
+              </div>
+            </div>
+            <div class="feedback-body" id="feedbackText"></div>
+            <!-- 약점 / 관심사 태그 -->
+            <div id="feedbackAnalysis" style="display:none;margin-bottom:10px">
+              <div style="display:flex;gap:16px;flex-wrap:wrap">
+                <div id="weakBox" style="flex:1;min-width:120px">
+                  <div class="feedback-section-title" style="color:#dc2626">⚠️ 약한 부분</div>
+                  <div id="weakTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
+                </div>
+                <div id="interestBox" style="flex:1;min-width:120px">
+                  <div class="feedback-section-title" style="color:#2563eb">🔥 관심 분야</div>
+                  <div id="interestTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
+                </div>
+              </div>
+            </div>
+            <div id="feedbackStrengths" style="display:none">
+              <div class="feedback-section-title">잘한 점</div>
+              <ul class="feedback-list strengths" id="strengthsList"></ul>
+            </div>
+            <div id="feedbackImprovements" style="display:none">
+              <div class="feedback-section-title">개선할 점</div>
+              <ul class="feedback-list improvements" id="improvementsList"></ul>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -492,162 +663,135 @@
     <div id="toast"></div>
 
     <script>
-      const qs = (s) => document.querySelector(s);
+      /* ═══════════════════════════════════════════════════════════
+         마이페이지 – 나만의 AI 노트  (대규모 트래픽 대응 버전)
+         ─────────────────────────────────────────────────────────
+         변경 사항:
+          1. AI 피드백 패널 (점수 링/강점/개선점)
+          2. 학습 통계 대시보드 (노트수/챗봇 질문수/평균점수)
+          3. Rate-limit 오류 UI (재시도 카운트다운)
+          4. 비동기(큐) 모드 – AI 서버 부하 시 폴링 방식 전환
+          5. 피드백 캐시 – 1시간 이내 재요청 시 서버 부하 없이 재사용
+       ══════════════════════════════════════════════════════════ */
+      const qs  = (s) => document.querySelector(s);
       const qsa = (s) => [...document.querySelectorAll(s)];
+
       const state = {
-        bookmarks: [],
-        notes: [],
-        selectedNoteId: null,
+        bookmarks       : [],
+        notes           : [],
+        selectedNoteId  : null,
         selectedBookmarkIds: new Set(),
-      };
-      const subjectLabels = {
-        biology: "생명과학",
-        physics: "물리학",
-        chemistry: "화학",
-        earth: "지구과학",
-        geography: "지리학",
-        "": "미분류",
+        stats           : null,
+        feedbackCache   : {},          // noteId → feedback object
+        asyncJobId      : null,        // 비동기 작업 ID
+        asyncPollTimer  : null,
+        rateLimitTimer  : null,
       };
 
-      function escapeHtml(value) {
-        return String(value ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+      const subjectLabels = {
+        biology : '생명과학', physics : '물리학',
+        chemistry: '화학',   earth   : '지구과학',
+        geography: '지리학', ''      : '미분류',
+      };
+
+      /* ── 유틸 ────────────────────────────────────────────────── */
+      function escapeHtml(v) {
+        return String(v ?? '')
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+          .replace(/'/g,'&#039;');
       }
 
-      function showToast(msg, bg = "#16a34a") {
-        const t = qs("#toast");
+      function showToast(msg, bg = '#16a34a') {
+        const t = qs('#toast');
         t.textContent = msg;
         t.style.background = bg;
-        t.style.opacity = "1";
-        t.style.transform = "translate(-50%,0)";
+        t.style.opacity    = '1';
+        t.style.transform  = 'translate(-50%,0)';
         clearTimeout(t._timer);
         t._timer = setTimeout(() => {
-          t.style.opacity = "0";
-          t.style.transform = "translate(-50%,-10px)";
-        }, 1800);
+          t.style.opacity   = '0';
+          t.style.transform = 'translate(-50%,-10px)';
+        }, 2500);
       }
 
-      async function api(path, method = "GET", body) {
+      async function api(path, method = 'GET', body) {
         const res = await fetch(path, {
           method,
-          headers:
-            body instanceof FormData
-              ? undefined
-              : { "Content-Type": "application/json" },
-          credentials: "include",
-          body: body
-            ? body instanceof FormData
-              ? body
-              : JSON.stringify(body)
+          headers : body instanceof FormData
+            ? undefined
+            : { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body   : body
+            ? body instanceof FormData ? body : JSON.stringify(body)
             : undefined,
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw Object.assign(new Error(data.error || "요청 실패"), {
-            status: res.status,
-            data,
-          });
-        }
+        if (!res.ok) throw Object.assign(new Error(data.error || '요청 실패'), { status: res.status, data });
         return data;
       }
 
+      /* ── 탭 ─────────────────────────────────────────────────── */
+      function setTab(name) {
+        qsa('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.tab === name));
+        qs('#bookmarksPanel').classList.toggle('active', name === 'bookmarks');
+        qs('#notesPanel').classList.toggle('active', name === 'notes');
+        if (name === 'notes' && !state.stats) loadStats();
+      }
+
+      /* ── 모달 ───────────────────────────────────────────────── */
       function toEmbed(url) {
         try {
-          const last = url.split("/").pop();
-          const uid = (last || "").split("-").pop();
+          const last = url.split('/').pop();
+          const uid  = (last || '').split('-').pop();
           return `https://sketchfab.com/models/${uid}/embed?ui_theme=dark`;
-        } catch {
-          return url;
-        }
+        } catch { return url; }
       }
-
       function openModal(title, url) {
-        qs("#modalTitle").textContent = title || "미리보기";
-        qs("#viewer").src = toEmbed(url);
-        qs("#modal").classList.add("open");
+        qs('#modalTitle').textContent = title || '미리보기';
+        qs('#viewer').src = toEmbed(url);
+        qs('#modal').classList.add('open');
       }
-
       function closeModal() {
-        qs("#modal").classList.remove("open");
-        qs("#viewer").src = "";
+        qs('#modal').classList.remove('open');
+        qs('#viewer').src = '';
       }
 
-      function openBookmarkPicker() {
-        qs("#bookmarkPickerModal").classList.add("open");
-        renderBookmarkChoices();
-      }
-
-      function closeBookmarkPicker() {
-        qs("#bookmarkPickerModal").classList.remove("open");
-      }
-
-      function setTab(name) {
-        qsa(".tab").forEach((tab) => {
-          tab.classList.toggle("active", tab.dataset.tab === name);
-        });
-        qs("#bookmarksPanel").classList.toggle("active", name === "bookmarks");
-        qs("#notesPanel").classList.toggle("active", name === "notes");
-      }
+      /* ── 북마크 picker ──────────────────────────────────────── */
+      function openBookmarkPicker()  { qs('#bookmarkPickerModal').classList.add('open');    renderBookmarkChoices(); }
+      function closeBookmarkPicker() { qs('#bookmarkPickerModal').classList.remove('open'); }
 
       function renderBookmarks() {
-        qs("#bookmarkCnt").textContent = state.bookmarks.length;
+        qs('#bookmarkCnt').textContent = state.bookmarks.length;
         if (!state.bookmarks.length) {
-          qs("#bookmarkList").innerHTML =
-            '<div class="empty" style="grid-column:1/-1">아직 북마크한 개념이 없습니다.</div>';
-          renderBookmarkChoices();
-          return;
+          qs('#bookmarkList').innerHTML = '<div class="empty" style="grid-column:1/-1">아직 북마크한 개념이 없습니다.</div>';
+          renderBookmarkChoices(); return;
         }
+        qs('#bookmarkList').innerHTML = state.bookmarks.map(m => {
+          const bg = m.thumb ? `style="background-image:url('${String(m.thumb).replace(/'/g,'%27')}')"` : '';
+          return `<article class="card" data-id="${m.id}" data-title="${escapeHtml(m.title)}" data-url="${escapeHtml(m.url||'')}">
+            <div class="thumb" ${bg}></div>
+            <div class="meta">
+              <div><div class="title">${escapeHtml(m.title)}</div><div class="sub">${escapeHtml(m.description||'')}</div></div>
+              <button class="btn btn-remove" type="button"><i class="bx bx-bookmark-x"></i>해제</button>
+            </div>
+          </article>`;
+        }).join('');
 
-        qs("#bookmarkList").innerHTML = state.bookmarks
-          .map((m) => {
-            const bg = m.thumb
-              ? `style="background-image:url('${String(m.thumb).replace(
-                  /'/g,
-                  "%27"
-                )}')"`
-              : "";
-            return `
-              <article class="card" data-id="${m.id}" data-title="${escapeHtml(
-              m.title
-            )}" data-url="${escapeHtml(m.url || "")}">
-                <div class="thumb" ${bg}></div>
-                <div class="meta">
-                  <div>
-                    <div class="title">${escapeHtml(m.title)}</div>
-                    <div class="sub">${escapeHtml(m.description || "")}</div>
-                  </div>
-                  <button class="btn btn-remove" type="button">
-                    <i class="bx bx-bookmark-x"></i>해제
-                  </button>
-                </div>
-              </article>`;
-          })
-          .join("");
-
-        qsa(".btn-remove").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            event.stopPropagation();
-            const id = button.closest(".card")?.dataset.id;
+        qsa('.btn-remove').forEach(btn => {
+          btn.addEventListener('click', async ev => {
+            ev.stopPropagation();
+            const id = btn.closest('.card')?.dataset.id;
             try {
-              await api(`/api/bookmarks/${id}`, "DELETE");
-              state.bookmarks = state.bookmarks.filter(
-                (item) => Number(item.id) !== Number(id)
-              );
-              renderBookmarks();
-              showToast("북마크를 해제했습니다.", "#dc2626");
-            } catch (err) {
-              alert(err.data?.error || err.message || "삭제 실패");
-            }
+              await api(`/api/bookmarks/${id}`, 'DELETE');
+              state.bookmarks = state.bookmarks.filter(item => Number(item.id) !== Number(id));
+              renderBookmarks(); showToast('북마크를 해제했습니다.', '#dc2626');
+            } catch (err) { alert(err.data?.error || err.message || '삭제 실패'); }
           });
         });
-
-        qsa(".card").forEach((card) => {
-          card.addEventListener("click", (event) => {
-            if (event.target.closest(".btn-remove")) return;
+        qsa('.card').forEach(card => {
+          card.addEventListener('click', ev => {
+            if (ev.target.closest('.btn-remove')) return;
             openModal(card.dataset.title, card.dataset.url);
           });
         });
@@ -655,51 +799,23 @@
       }
 
       function renderBookmarkChoices() {
-        const box = qs("#bookmarkSelectList");
+        const box = qs('#bookmarkSelectList');
         if (!box) return;
-
-        const validIds = new Set(state.bookmarks.map((item) => Number(item.id)));
-        state.selectedBookmarkIds = new Set(
-          [...state.selectedBookmarkIds].filter((id) => validIds.has(Number(id)))
-        );
-
+        const validIds = new Set(state.bookmarks.map(item => Number(item.id)));
+        state.selectedBookmarkIds = new Set([...state.selectedBookmarkIds].filter(id => validIds.has(Number(id))));
         if (!state.bookmarks.length) {
-          box.innerHTML =
-            '<div class="empty" style="grid-column:1/-1">노트로 정리할 북마크가 아직 없습니다.</div>';
-          updateGenerateButton();
-          return;
+          box.innerHTML = '<div class="empty" style="grid-column:1/-1">노트로 정리할 북마크가 아직 없습니다.</div>';
+          updateGenerateButton(); return;
         }
-
-        box.innerHTML = state.bookmarks
-          .map(
-            (item) => `
-              <label class="select-card">
-                <input
-                  type="checkbox"
-                  class="bookmark-choice"
-                  value="${item.id}"
-                  ${state.selectedBookmarkIds.has(Number(item.id)) ? "checked" : ""}
-                />
-                <div class="thumb" ${
-                  item.thumb
-                    ? `style="background-image:url('${String(item.thumb).replace(
-                        /'/g,
-                        "%27"
-                      )}')"`
-                    : ""
-                }></div>
-                <div class="meta">
-                  <div>
-                    <div class="title">${escapeHtml(item.title)}</div>
-                    <div class="sub">${escapeHtml(item.description || "")}</div>
-                  </div>
-                </div>
-              </label>`
-          )
-          .join("");
-
-        qsa(".bookmark-choice").forEach((input) => {
-          input.addEventListener("change", () => {
+        box.innerHTML = state.bookmarks.map(item => `
+          <label class="select-card">
+            <input type="checkbox" class="bookmark-choice" value="${item.id}"
+              ${state.selectedBookmarkIds.has(Number(item.id)) ? 'checked' : ''}/>
+            <div class="thumb" ${item.thumb ? `style="background-image:url('${String(item.thumb).replace(/'/g,'%27')}')"` : ''}></div>
+            <div class="meta"><div><div class="title">${escapeHtml(item.title)}</div><div class="sub">${escapeHtml(item.description||'')}</div></div></div>
+          </label>`).join('');
+        qsa('.bookmark-choice').forEach(input => {
+          input.addEventListener('change', () => {
             const id = Number(input.value);
             if (input.checked) state.selectedBookmarkIds.add(id);
             else state.selectedBookmarkIds.delete(id);
@@ -710,209 +826,353 @@
       }
 
       function updateGenerateButton() {
-        const button = qs("#btnCreateSelectedNote");
+        const btn   = qs('#btnCreateSelectedNote');
         const count = state.selectedBookmarkIds.size;
-        if (!button) return;
-        button.disabled = count === 0;
-        button.innerHTML = `<i class="bx bx-sparkles"></i>선택한 ${count}개 정리`;
+        if (!btn) return;
+        btn.disabled = count === 0;
+        btn.innerHTML = `<i class="bx bx-sparkles"></i>선택한 ${count}개 정리`;
       }
 
+      /* ── 노트 에디터 ────────────────────────────────────────── */
       function resetEditor() {
         state.selectedNoteId = null;
-        qs("#noteTitle").value = "";
-        qs("#noteSubject").value = "";
-        qs("#noteContent").value = "";
-        qs("#btnDeleteNote").style.visibility = "hidden";
-        qsa(".note-card").forEach((card) => card.classList.remove("active"));
+        qs('#noteTitle').value   = '';
+        qs('#noteSubject').value = '';
+        qs('#noteContent').value = '';
+        qs('#btnDeleteNote').style.visibility = 'hidden';
+        qs('#btnFeedback').style.display      = 'none';
+        hideFeedbackPanel();
+        qsa('.note-card').forEach(card => card.classList.remove('active'));
       }
 
       function selectNote(id) {
-        const note = state.notes.find((item) => Number(item.id) === Number(id));
+        const note = state.notes.find(item => Number(item.id) === Number(id));
         if (!note) return;
-        state.selectedNoteId = note.id;
-        qs("#noteTitle").value = note.title || "";
-        qs("#noteSubject").value = note.subject || "";
-        qs("#noteContent").value = note.content || "";
-        qs("#btnDeleteNote").style.visibility = "visible";
-        qsa(".note-card").forEach((card) => {
-          card.classList.toggle("active", Number(card.dataset.id) === Number(id));
-        });
+        state.selectedNoteId        = note.id;
+        qs('#noteTitle').value      = note.title   || '';
+        qs('#noteSubject').value    = note.subject || '';
+        qs('#noteContent').value    = note.content || '';
+        qs('#btnDeleteNote').style.visibility = 'visible';
+        qs('#btnFeedback').style.display      = '';
+        qsa('.note-card').forEach(card => card.classList.toggle('active', Number(card.dataset.id) === Number(id)));
+        // 캐시된 피드백 있으면 바로 표시
+        if (state.feedbackCache[id]) showFeedbackPanel(state.feedbackCache[id]);
+        else hideFeedbackPanel();
       }
 
       function renderNotes() {
-        qs("#noteCnt").textContent = state.notes.length;
+        qs('#noteCnt').textContent = state.notes.length;
         if (!state.notes.length) {
-          qs("#noteList").innerHTML =
-            '<div class="empty">아직 노트가 없습니다. AI 노트 만들기로 초안을 만들어보세요.</div>';
-          resetEditor();
-          return;
+          qs('#noteList').innerHTML = '<div class="empty">아직 노트가 없습니다. AI 노트 만들기로 초안을 만들어보세요.</div>';
+          resetEditor(); return;
         }
-
-        qs("#noteList").innerHTML = state.notes
-          .map(
-            (note) => `
-              <article class="note-card" data-id="${note.id}">
-                <strong>${escapeHtml(note.title)}</strong>
-                <div class="muted">${escapeHtml(
-                  subjectLabels[note.subject || ""] || note.subject || "미분류"
-                )}</div>
-                <p>${escapeHtml(note.content || "")}</p>
-              </article>`
-          )
-          .join("");
-
-        qsa(".note-card").forEach((card) => {
-          card.addEventListener("click", () => selectNote(card.dataset.id));
+        qs('#noteList').innerHTML = state.notes.map(note => {
+          const scoreBadge = state.feedbackCache[note.id]
+            ? `<span class="score-badge">⭐${state.feedbackCache[note.id].score}</span>` : '';
+          return `<article class="note-card" data-id="${note.id}">
+            <strong>${escapeHtml(note.title)}${scoreBadge}</strong>
+            <div class="muted">${escapeHtml(subjectLabels[note.subject||'']||note.subject||'미분류')}</div>
+            <p>${escapeHtml(note.content||'')}</p>
+          </article>`;
+        }).join('');
+        qsa('.note-card').forEach(card => {
+          card.addEventListener('click', () => selectNote(card.dataset.id));
         });
-
-        const keepSelected = state.notes.some(
-          (note) => Number(note.id) === Number(state.selectedNoteId)
-        );
+        const keepSelected = state.notes.some(note => Number(note.id) === Number(state.selectedNoteId));
         selectNote(keepSelected ? state.selectedNoteId : state.notes[0].id);
       }
 
+      /* ── AI 피드백 패널 ─────────────────────────────────────── */
+      function showFeedbackPanel(fb) {
+        const panel = qs('#feedbackPanel');
+        panel.style.display = '';
+
+        // 점수 링 애니메이션
+        const score       = Math.min(100, Math.max(0, fb.score || 0));
+        const circumference = 163.36;
+        const offset      = circumference - (score / 100) * circumference;
+        qs('#scoreArc').setAttribute('stroke-dashoffset', offset.toFixed(2));
+        qs('#scoreText').textContent = score;
+
+        // 색상: 0~49=빨, 50~74=노, 75~=초록
+        const color = score >= 75 ? '#16a34a' : score >= 50 ? '#d97706' : '#dc2626';
+        qs('#scoreArc').setAttribute('stroke', color);
+        qs('#scoreText').style.color = color;
+
+        qs('#feedbackText').textContent = fb.feedback || '';
+        qs('#feedbackMeta').textContent = fb.fromCache ? '캐시된 피드백' : '방금 생성된 피드백';
+
+        const strBox = qs('#feedbackStrengths');
+        const impBox = qs('#feedbackImprovements');
+        const strList = qs('#strengthsList');
+        const impList = qs('#improvementsList');
+
+        if (fb.strengths?.length) {
+          strBox.style.display = '';
+          strList.innerHTML    = fb.strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+        } else strBox.style.display = 'none';
+
+        if (fb.improvements?.length) {
+          impBox.style.display = '';
+          impList.innerHTML    = fb.improvements.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+        } else impBox.style.display = 'none';
+
+        // 약점/관심사 태그
+        const analysisBox   = qs('#feedbackAnalysis');
+        const weakTags      = qs('#weakTags');
+        const interestTags  = qs('#interestTags');
+        const hasWeak       = fb.weakAreas?.length;
+        const hasInterest   = fb.interestAreas?.length;
+        if (hasWeak || hasInterest) {
+          analysisBox.style.display = '';
+          weakTags.innerHTML = (fb.weakAreas || [])
+            .map(w => `<span class="analysis-tag tag-weak">${escapeHtml(w)}</span>`).join('');
+          interestTags.innerHTML = (fb.interestAreas || [])
+            .map(i => `<span class="analysis-tag tag-interest">${escapeHtml(i)}</span>`).join('');
+        } else {
+          analysisBox.style.display = 'none';
+        }
+      }
+
+      function hideFeedbackPanel() {
+        qs('#feedbackPanel').style.display = 'none';
+      }
+
+      /* ── 학습 통계 ──────────────────────────────────────────── */
+      async function loadStats() {
+        try {
+          const data = await api('/api/notes/stats');
+          state.stats = data.stats;
+          const bar = qs('#statsBar');
+          bar.style.display = '';
+          qs('#statNotes').textContent = data.stats.noteCount;
+          qs('#statChats').textContent = data.stats.chatCount;
+          qs('#statScore').textContent = data.stats.avgScore > 0 ? data.stats.avgScore : '-';
+          const recent = data.stats.recentFeedback;
+          qs('#statRecentFeedback').textContent = recent?.length
+            ? `${recent[0].title} – ${recent[0].score}점`
+            : '피드백 없음';
+        } catch (err) {
+          console.warn('[stats]', err.message);
+        }
+      }
+
+      /* ── Rate-limit 처리 ────────────────────────────────────── */
+      function showRateLimit(retryAfter) {
+        const alert = qs('#rateAlert');
+        alert.style.display = '';
+        let secs = retryAfter || 60;
+        const tick = () => {
+          qs('#rateAlertMsg').textContent = `요청이 너무 많습니다. ${secs}초 후 다시 시도하세요.`;
+          if (secs <= 0) { alert.style.display = 'none'; return; }
+          secs--;
+          state.rateLimitTimer = setTimeout(tick, 1000);
+        };
+        clearTimeout(state.rateLimitTimer);
+        tick();
+      }
+
+      /* ── 비동기 작업 폴링 ───────────────────────────────────── */
+      function startAsyncPoll(jobId) {
+        state.asyncJobId = jobId;
+        qs('#asyncStatus').style.display = '';
+        qs('#asyncStatusMsg').textContent = 'AI 노트를 생성하고 있습니다…';
+        clearInterval(state.asyncPollTimer);
+        state.asyncPollTimer = setInterval(async () => {
+          try {
+            const data = await api(`/api/notes/jobs/${jobId}`);
+            if (data.job.status === 'done') {
+              stopAsyncPoll();
+              if (data.note) {
+                state.notes.unshift(data.note);
+                renderNotes();
+                selectNote(data.note.id);
+                showToast('AI 노트가 완성되었습니다!');
+                loadStats();
+              }
+            } else if (data.job.status === 'failed') {
+              stopAsyncPoll();
+              showToast('AI 노트 생성 실패: ' + (data.job.error_msg || '알 수 없는 오류'), '#dc2626');
+            } else {
+              qs('#asyncStatusMsg').textContent = `AI 노트를 생성하고 있습니다… (상태: ${data.job.status})`;
+            }
+          } catch (err) {
+            console.warn('[poll]', err.message);
+          }
+        }, 3000);
+      }
+
+      function stopAsyncPoll() {
+        clearInterval(state.asyncPollTimer);
+        state.asyncPollTimer = null;
+        state.asyncJobId = null;
+        qs('#asyncStatus').style.display = 'none';
+      }
+
+      /* ── 데이터 로드 ────────────────────────────────────────── */
       async function loadBookmarks() {
-        const data = await api("/api/bookmarks?expand=1");
+        const data = await api('/api/bookmarks?expand=1');
         state.bookmarks = data.items || [];
         renderBookmarks();
       }
 
       async function loadNotes() {
-        const data = await api("/api/notes");
+        const data = await api('/api/notes');
         state.notes = data.items || [];
         renderNotes();
       }
 
       async function load() {
         try {
-          const me = await api("/api/auth/whoami");
-          if (!me?.user || me.user.role === "admin") {
-            location.href = "/";
-            return;
-          }
+          const me = await api('/api/auth/whoami');
+          if (!me?.user || me.user.role === 'admin') { location.href = '/'; return; }
           await Promise.all([loadBookmarks(), loadNotes()]);
-        } catch {
-          location.href = "/";
-        }
+        } catch { location.href = '/'; }
       }
 
-      qsa(".tab").forEach((tab) => {
-        tab.addEventListener("click", () => setTab(tab.dataset.tab));
-      });
-      qs("#btnClose").addEventListener("click", closeModal);
-      qs("#modal").addEventListener("click", (event) => {
-        if (event.target === event.currentTarget) closeModal();
-      });
-      qs("#bookmarkPickerModal").addEventListener("click", (event) => {
-        if (event.target === event.currentTarget) closeBookmarkPicker();
-      });
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          closeModal();
-          closeBookmarkPicker();
-        }
-      });
+      /* ── 이벤트 바인딩 ──────────────────────────────────────── */
+      qsa('.tab').forEach(tab => tab.addEventListener('click', () => setTab(tab.dataset.tab)));
 
-      qs("#btnNewNote").addEventListener("click", () => {
-        resetEditor();
-        qs("#noteTitle").focus();
-      });
+      qs('#btnClose').addEventListener('click', closeModal);
+      qs('#modal').addEventListener('click', ev => { if (ev.target === ev.currentTarget) closeModal(); });
+      qs('#bookmarkPickerModal').addEventListener('click', ev => { if (ev.target === ev.currentTarget) closeBookmarkPicker(); });
+      document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { closeModal(); closeBookmarkPicker(); } });
 
-      qs("#btnSelectAllBookmarks").addEventListener("click", () => {
-        const allSelected =
-          state.bookmarks.length > 0 &&
-          state.bookmarks.every((item) =>
-            state.selectedBookmarkIds.has(Number(item.id))
-          );
+      qs('#btnNewNote').addEventListener('click', () => { resetEditor(); qs('#noteTitle').focus(); });
+
+      qs('#btnSelectAllBookmarks').addEventListener('click', () => {
+        const allSelected = state.bookmarks.length > 0
+          && state.bookmarks.every(item => state.selectedBookmarkIds.has(Number(item.id)));
         state.selectedBookmarkIds = allSelected
           ? new Set()
-          : new Set(state.bookmarks.map((item) => Number(item.id)));
+          : new Set(state.bookmarks.map(item => Number(item.id)));
         renderBookmarkChoices();
       });
 
-      qs("#btnGenerateNote").addEventListener("click", async () => {
-        openBookmarkPicker();
-      });
+      qs('#btnGenerateNote').addEventListener('click', () => openBookmarkPicker());
+      qs('#btnCloseBookmarkSelection').addEventListener('click', () => closeBookmarkPicker());
 
-      qs("#btnCloseBookmarkSelection").addEventListener("click", () => {
-        closeBookmarkPicker();
-      });
-
-      qs("#btnCreateSelectedNote").addEventListener("click", async () => {
-        if (!state.selectedBookmarkIds.size) {
-          showToast("정리할 북마크를 먼저 선택하세요.", "#dc2626");
-          return;
-        }
-        const button = qs("#btnCreateSelectedNote");
-        const original = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>정리 중';
+      /* ── AI 노트 생성 (즉시 + 비동기 폴백) ─────────────────── */
+      qs('#btnCreateSelectedNote').addEventListener('click', async () => {
+        if (!state.selectedBookmarkIds.size) { showToast('정리할 북마크를 먼저 선택하세요.', '#dc2626'); return; }
+        const btn      = qs('#btnCreateSelectedNote');
+        const original = btn.innerHTML;
+        btn.disabled   = true;
+        btn.innerHTML  = '<i class="bx bx-loader-alt spin"></i>정리 중';
         try {
-          const data = await api("/api/notes/generate", "POST", {
-            modelIds: [...state.selectedBookmarkIds],
-          });
+          const data = await api('/api/notes/generate', 'POST', { modelIds: [...state.selectedBookmarkIds] });
           state.notes.unshift(data.item);
           renderNotes();
           selectNote(data.item.id);
           closeBookmarkPicker();
-          showToast(data.aiUsed ? "AI 노트를 만들었습니다." : "기본 노트를 만들었습니다.");
+          showToast(data.aiUsed
+            ? (data.fromCache ? '캐시된 AI 노트를 불러왔습니다.' : 'AI 노트를 만들었습니다.')
+            : '기본 노트를 만들었습니다.');
+          loadStats();
         } catch (err) {
-          alert(err.data?.error || err.message || "AI 노트 생성 실패");
+          if (err.status === 429) {
+            closeBookmarkPicker();
+            showRateLimit(err.data?.retryAfter);
+            // Rate-limit 시 비동기 큐로 전환
+            try {
+              const asyncData = await api('/api/notes/generate/async', 'POST', { modelIds: [...state.selectedBookmarkIds] });
+              startAsyncPoll(asyncData.jobId);
+              showToast('요청이 많아 대기열에 등록되었습니다.', '#d97706');
+            } catch (e2) { console.warn('[async fallback]', e2.message); }
+          } else {
+            alert(err.data?.error || err.message || 'AI 노트 생성 실패');
+          }
         } finally {
-          button.innerHTML = original;
+          btn.innerHTML = original;
           updateGenerateButton();
         }
       });
 
-      qs("#noteForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
+      /* ── 노트 저장/수정 ─────────────────────────────────────── */
+      qs('#noteForm').addEventListener('submit', async ev => {
+        ev.preventDefault();
         const payload = {
-          title: qs("#noteTitle").value,
-          subject: qs("#noteSubject").value,
-          content: qs("#noteContent").value,
+          title  : qs('#noteTitle').value,
+          subject: qs('#noteSubject').value,
+          content: qs('#noteContent').value,
         };
         try {
           if (state.selectedNoteId) {
-            await api(`/api/notes/${state.selectedNoteId}`, "PUT", payload);
-            const note = state.notes.find(
-              (item) => Number(item.id) === Number(state.selectedNoteId)
-            );
+            await api(`/api/notes/${state.selectedNoteId}`, 'PUT', payload);
+            const note = state.notes.find(item => Number(item.id) === Number(state.selectedNoteId));
             Object.assign(note, payload);
+            // 수정 시 피드백 캐시 무효화
+            delete state.feedbackCache[state.selectedNoteId];
+            hideFeedbackPanel();
             renderNotes();
             selectNote(state.selectedNoteId);
-            showToast("노트를 수정했습니다.");
+            showToast('노트를 수정했습니다.');
           } else {
-            const data = await api("/api/notes", "POST", payload);
-            state.notes.unshift({ id: data.id, ...payload, created_at: "" });
+            const data = await api('/api/notes', 'POST', payload);
+            state.notes.unshift({ id: data.id, ...payload, created_at: '' });
             renderNotes();
             selectNote(data.id);
-            showToast("노트를 저장했습니다.");
+            showToast('노트를 저장했습니다.');
           }
-        } catch (err) {
-          alert(err.data?.error || err.message || "저장 실패");
-        }
+        } catch (err) { alert(err.data?.error || err.message || '저장 실패'); }
       });
 
-      qs("#btnDeleteNote").addEventListener("click", async () => {
+      /* ── 노트 삭제 ──────────────────────────────────────────── */
+      qs('#btnDeleteNote').addEventListener('click', async () => {
         if (!state.selectedNoteId) return;
-        if (!confirm("이 노트를 삭제할까요?")) return;
+        if (!confirm('이 노트를 삭제할까요?')) return;
         try {
-          await api(`/api/notes/${state.selectedNoteId}`, "DELETE");
-          state.notes = state.notes.filter(
-            (note) => Number(note.id) !== Number(state.selectedNoteId)
-          );
+          await api(`/api/notes/${state.selectedNoteId}`, 'DELETE');
+          delete state.feedbackCache[state.selectedNoteId];
+          state.notes = state.notes.filter(note => Number(note.id) !== Number(state.selectedNoteId));
           renderNotes();
-          showToast("노트를 삭제했습니다.", "#dc2626");
+          showToast('노트를 삭제했습니다.', '#dc2626');
+        } catch (err) { alert(err.data?.error || err.message || '삭제 실패'); }
+      });
+
+      /* ── AI 피드백 버튼 ─────────────────────────────────────── */
+      qs('#btnFeedback').addEventListener('click', async () => {
+        if (!state.selectedNoteId) return;
+        // 클라이언트 캐시 확인 (1시간)
+        const cached = state.feedbackCache[state.selectedNoteId];
+        if (cached && (Date.now() - cached._ts) < 60 * 60 * 1000) {
+          showFeedbackPanel(cached);
+          return;
+        }
+        const btn      = qs('#btnFeedback');
+        const original = btn.innerHTML;
+        btn.disabled   = true;
+        btn.innerHTML  = '<i class="bx bx-loader-alt spin"></i>분석 중';
+        try {
+          const data = await api(`/api/notes/${state.selectedNoteId}/feedback`, 'POST');
+          const fb = {
+            feedback     : data.feedback,
+            strengths    : data.strengths    || [],
+            improvements : data.improvements || [],
+            weakAreas    : data.weakAreas    || [],
+            interestAreas: data.interestAreas|| [],
+            score        : data.score,
+            fromCache    : data.fromCache,
+            _ts          : Date.now(),
+          };
+          state.feedbackCache[state.selectedNoteId] = fb;
+          showFeedbackPanel(fb);
+          renderNotes();   // 노트 카드 점수 배지 갱신
+          loadStats();     // 통계 갱신
+          showToast('AI 피드백을 생성했습니다.');
         } catch (err) {
-          alert(err.data?.error || err.message || "삭제 실패");
+          if (err.status === 429) showRateLimit(err.data?.retryAfter);
+          else alert(err.data?.error || err.message || '피드백 생성 실패');
+        } finally {
+          btn.innerHTML = original;
+          btn.disabled  = false;
         }
       });
 
-      qs("#btnLogout").addEventListener("click", async () => {
-        try {
-          await api("/api/auth/logout", "POST");
-        } catch {}
-        location.href = "/";
+      /* ── 로그아웃 ───────────────────────────────────────────── */
+      qs('#btnLogout').addEventListener('click', async () => {
+        try { await api('/api/auth/logout', 'POST'); } catch {}
+        location.href = '/';
       });
 
       resetEditor();

@@ -11,6 +11,9 @@ const { URL } = require('url');
 const { db, runMigrations } = require('./db');
 // 🍑 Python AI 서버 프록시용
 const axios = require('axios');
+// 🤖 AI 노트 서비스 (대규모 트래픽 대응)
+const aiNoteService = require('./aiNoteService');
+const aiNotesRoute  = require('./routes/aiNotes');
 
 const app = express();
 const PORT = 3000;
@@ -521,6 +524,59 @@ app.get('/api/semantic_search', async (req, res) => {
     }
 });
 
+/* ── 챗봇 API ──────────────────────────────────────────────────────────────
+   흐름: Python AI 서버(8000) 우선 시도 → 실패 시 Anthropic API 폴백
+   ─────────────────────────────────────────────────────────────────────── */
+const SUBJECT_LABELS_CHAT = {
+    biology  : '생명과학', physics  : '물리학',
+    chemistry: '화학',     earth    : '지구과학',
+    geography: '지리학',   ''       : '일반',
+};
+
+async function callPythonChat(message, subject, withQuiz) {
+    const response = await axios.post(
+        `${PYTHON_AI_SERVER}/chat`,
+        { message, subject, with_quiz: Boolean(withQuiz) },
+        { timeout: 30000, httpAgent: httpAgentV4 }
+    );
+    // Python 서버가 200이어도 answer가 없으면 폴백 트리거
+    if (!response.data?.answer && !response.data?.results) {
+        throw Object.assign(new Error('EMPTY_ANSWER'), { isPythonDown: true });
+    }
+    return response.data;
+}
+
+async function callAnthropicChat(message, subject, withQuiz) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error('ANTHROPIC_API_KEY 환경변수가 없습니다');
+
+    const subjectLabel = SUBJECT_LABELS_CHAT[subject] || '일반';
+    let userMsg = message;
+    if (withQuiz) {
+        userMsg += '\n\n퀴즈 형식으로 답할 때는 객관식 또는 단답형 3문제와 정답, 짧은 해설을 포함해줘.';
+    }
+
+    const response = await axios.post(
+        'https://api.anthropic.com/v1/messages',
+        {
+            model      : 'claude-haiku-4-5-20251001',
+            max_tokens : 1024,
+            system     : `너는 중고등학생을 돕는 한국어 학습 도우미야. 답변은 정확하고 친절하게 하되, 너무 길지 않게 핵심부터 설명해. 학생이 외우기보다 이해할 수 있도록 예시를 들어줘. 현재 과목은 ${subjectLabel}이야.`,
+            messages   : [{ role: 'user', content: userMsg }],
+        },
+        {
+            timeout: 60000,
+            headers: {
+                'x-api-key'        : apiKey,
+                'anthropic-version': '2023-06-01',
+                'content-type'     : 'application/json',
+            },
+        }
+    );
+    const answer = response.data?.content?.[0]?.text || '답변을 생성하지 못했어요.';
+    return { answer, model: 'claude-haiku (fallback)', subject };
+}
+
 app.post('/api/chat', requireLogin, async (req, res) => {
     try {
         const { message, subject = '', withQuiz = false } = req.body || {};
@@ -532,43 +588,48 @@ app.post('/api/chat', requireLogin, async (req, res) => {
         const uid = await getUserId(req.me.username);
         dbRun(
             `INSERT INTO chat_logs (user_id, message, subject, with_quiz) VALUES (?, ?, ?, ?)`,
-            [
-                uid,
-                String(message).trim(),
-                String(subject || ''),
-                withQuiz ? 1 : 0,
-            ]
+            [uid, String(message).trim(), String(subject || ''), withQuiz ? 1 : 0]
         ).catch((err) => console.warn('[chat_logs]', err.message));
 
-        const response = await axios.post(
-            `${PYTHON_AI_SERVER}/chat`,
-            {
-                message: String(message).trim(),
-                subject,
-                with_quiz: Boolean(withQuiz),
-            },
-            {
-                timeout: 120000,
-                httpAgent: httpAgentV4,
+        const cleanMsg = String(message).trim();
+
+        // 1차: Python AI 서버 시도
+        try {
+            const data = await callPythonChat(cleanMsg, subject, withQuiz);
+            return res.json(data);
+        } catch (pyErr) {
+            // 폴백 조건: 연결 불가 / 타임아웃 / 서버 5xx / 모델 로딩 실패 / 빈 응답
+            const DOWN_CODES  = ['ECONNREFUSED','ECONNRESET','ETIMEDOUT','ENOTFOUND','ERR_BAD_RESPONSE'];
+            const isConnErr   = DOWN_CODES.includes(pyErr.code);
+            const isServerErr = (pyErr.response?.status ?? 0) >= 500;
+            const isEmptyAns  = pyErr.isPythonDown === true;
+            const isPythonDown = isConnErr || isServerErr || isEmptyAns;
+
+            if (!isPythonDown) {
+                // Python 서버는 정상이지만 요청 자체 오류(400 등) → 그대로 반환
+                console.error('[chat] Python 요청 오류:', pyErr.message);
+                return res.status(pyErr.response?.status || 500).json({
+                    error: pyErr.response?.data?.detail || pyErr.response?.data?.error || pyErr.message,
+                });
             }
-        );
+            console.warn('[chat] Python AI 서버 폴백 → Anthropic API 사용. 사유:', pyErr.message);
+        }
 
-        res.json(response.data);
-    } catch (error) {
-        console.error('챗봇 오류:', error.message);
-
-        if (error.code === 'ECONNREFUSED') {
+        // 2차: Anthropic API 폴백
+        try {
+            const data = await callAnthropicChat(cleanMsg, subject, withQuiz);
+            return res.json(data);
+        } catch (anthErr) {
+            console.error('[chat] Anthropic API 오류:', anthErr.message);
             return res.status(503).json({
-                error: 'AI 서버가 실행 중이 아닙니다. npm run ai를 먼저 실행해주세요.',
+                error: 'AI 서버와 Anthropic API 모두 응답하지 않습니다. 잠시 후 다시 시도해주세요.',
+                detail: anthErr.message,
             });
         }
 
-        res.status(error.response?.status || 500).json({
-            error:
-                error.response?.data?.error ||
-                error.response?.data?.detail ||
-                '챗봇 답변 생성 중 오류가 발생했습니다',
-        });
+    } catch (error) {
+        console.error('[chat] 예상치 못한 오류:', error.message);
+        res.status(500).json({ error: '챗봇 처리 중 오류가 발생했습니다: ' + error.message });
     }
 });
 
@@ -1171,9 +1232,35 @@ app.get(['/teacher', '/teacher/'], (_req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'teacher.html'));
 });
 
+
+/* ================== AI 노트 서비스 초기화 ================== */
+function dbGet(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            if (err) return reject(err);
+            resolve(row || null);
+        });
+    });
+}
+aiNoteService.injectDb(dbAll, dbRun, dbGet);
+aiNotesRoute.injectDeps({
+    aiNoteService,
+    dbAll,
+    dbRun,
+    dbGet,
+    getUserId,
+    readJson,
+    MODELS_JSON,
+});
+// /api/notes/generate/async, /api/notes/jobs/:id, /api/notes/stats,
+// /api/notes/feedback-history, /api/notes/:id/feedback
+app.use('/api/notes', requireLogin, aiNotesRoute.router);
+
 /* ================== 서버 기동 ================== */
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server → http://localhost:${PORT}`);
     if (!fs.existsSync(MODELS_JSON)) writeJson(MODELS_JSON, []);
     if (!fs.existsSync(CATEGORIES_JSON)) writeJson(CATEGORIES_JSON, []);
+    await aiNoteService.recoverPendingJobs();
+    console.log('[AI Note Service] 초기화 완료 – LRU캐시/Rate-limit/Circuit-breaker 활성');
 });

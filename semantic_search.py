@@ -263,6 +263,16 @@ def chat(req: ChatRequest):
 
     try:
         tokenizer, model = load_chat_model()
+    except Exception as load_err:
+        # 모델 로딩 실패 → 500으로 반환해 Node.js가 Anthropic으로 폴백하도록 유도
+        err_msg = str(load_err)
+        print(f"[chat] 모델 로딩 실패: {err_msg}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"모델 로딩 실패: {err_msg}"
+        )
+
+    try:
         messages = build_chat_messages(req)
         prompt = tokenizer.apply_chat_template(
             messages,
@@ -284,14 +294,22 @@ def chat(req: ChatRequest):
 
         output_ids = generated[0][inputs.input_ids.shape[-1]:]
         answer = tokenizer.decode(output_ids, skip_special_tokens=True).strip()
+
+        if not answer:
+            raise HTTPException(status_code=500, detail="모델이 빈 응답을 반환했습니다")
+
         return {
             "answer": answer,
             "model": CHAT_MODEL_NAME,
             "subject": req.subject,
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"챗봇 생성 오류: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        err_msg = str(e)
+        print(f"[chat] 답변 생성 오류: {err_msg}")
+        # 500으로 올려서 Node.js 폴백 트리거
+        raise HTTPException(status_code=500, detail=f"답변 생성 오류: {err_msg}")
 
 @app.get("/health")
 def health_check():
@@ -304,7 +322,19 @@ def health_check():
     }
 
 if __name__ == "__main__":
-    # 🍑 서버 실행 (포트 8000)
-    print("🍑 AI 의미 검색 서버 시작: http://localhost:8000")
-    print("🍑 API 문서: http://localhost:8000/docs")
-    uvicorn.run("semantic_search:app", host="0.0.0.0", port=8000, reload=True)
+    import multiprocessing
+    multiprocessing.freeze_support()   # Windows exe 패키징 대비
+
+    print("AI 의미 검색 서버 시작: http://localhost:8000")
+    print("API 문서: http://localhost:8000/docs")
+
+    # ✅ reload=False: Windows에서 자식 프로세스 즉시 종료 문제 해결
+    #    (reload=True 는 watchfiles 패키지 + 멀티프로세스 필요 → Windows 호환 X)
+    uvicorn.run(
+        "semantic_search:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+        workers=1,
+        log_level="info",
+    )
