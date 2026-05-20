@@ -433,6 +433,20 @@
         font-size: 0.78rem; font-weight: 700;
         margin-left: 4px;
       }
+      /* ── 심층 피드백 섹션 ── */
+      .feedback-section {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e0e7ff;
+      }
+      .next-step-box {
+        background: linear-gradient(135deg,#fefce8,#f0fdf4);
+        border: 1.5px solid #86efac;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-top: 14px;
+      }
+      .next-step-box .feedback-section-title { color: #15803d; border-top: none; }
       /* ── 약점/관심사 태그 ── */
       .analysis-tag {
         display: inline-block;
@@ -567,12 +581,14 @@
               </button>
             </div>
           </form>
-          <!-- AI 피드백 패널 -->
+          <!-- AI 심층 피드백 패널 -->
           <div class="feedback-panel" id="feedbackPanel" style="display:none">
+            <!-- 헤더: 점수링 + 등급 + 메타 -->
             <div class="feedback-header">
-              <div>
-                <div class="score-label"><i class="bx bx-bar-chart-alt-2"></i> AI 학습 피드백</div>
+              <div style="flex:1">
+                <div class="score-label"><i class="bx bx-brain"></i> AI 심층 학습 피드백</div>
                 <div class="muted" style="font-size:0.82rem;margin-top:2px" id="feedbackMeta"></div>
+                <div id="gradeBadge" style="margin-top:6px"></div>
               </div>
               <div class="score-ring" id="scoreRing">
                 <svg viewBox="0 0 64 64">
@@ -584,27 +600,55 @@
                 <div class="score-text" id="scoreText">-</div>
               </div>
             </div>
-            <div class="feedback-body" id="feedbackText"></div>
-            <!-- 약점 / 관심사 태그 -->
-            <div id="feedbackAnalysis" style="display:none;margin-bottom:10px">
+
+            <!-- 종합 요약 -->
+            <div class="feedback-section" id="summarySection" style="display:none">
+              <div class="feedback-section-title">📋 종합 요약</div>
+              <div class="feedback-body" id="summaryText"></div>
+            </div>
+
+            <!-- 약점 / 관심 분야 태그 -->
+            <div id="feedbackAnalysis" style="display:none">
               <div style="display:flex;gap:16px;flex-wrap:wrap">
-                <div id="weakBox" style="flex:1;min-width:120px">
+                <div style="flex:1;min-width:120px">
                   <div class="feedback-section-title" style="color:#dc2626">⚠️ 약한 부분</div>
                   <div id="weakTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
                 </div>
-                <div id="interestBox" style="flex:1;min-width:120px">
+                <div style="flex:1;min-width:120px">
                   <div class="feedback-section-title" style="color:#2563eb">🔥 관심 분야</div>
                   <div id="interestTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
                 </div>
               </div>
             </div>
-            <div id="feedbackStrengths" style="display:none">
-              <div class="feedback-section-title">잘한 점</div>
-              <ul class="feedback-list strengths" id="strengthsList"></ul>
+
+            <!-- 개념 이해도 분석 -->
+            <div class="feedback-section" id="conceptSection" style="display:none">
+              <div class="feedback-section-title">🧠 개념 이해도 분석</div>
+              <div class="feedback-body" id="conceptText"></div>
             </div>
-            <div id="feedbackImprovements" style="display:none">
-              <div class="feedback-section-title">개선할 점</div>
-              <ul class="feedback-list improvements" id="improvementsList"></ul>
+
+            <!-- 학습 패턴 분석 -->
+            <div class="feedback-section" id="patternSection" style="display:none">
+              <div class="feedback-section-title">📊 학습 패턴 분석</div>
+              <div class="feedback-body" id="patternText"></div>
+            </div>
+
+            <!-- 잘한 점 / 개선할 점 -->
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div id="feedbackStrengths" style="display:none;flex:1;min-width:180px">
+                <div class="feedback-section-title">✅ 잘한 점</div>
+                <ul class="feedback-list strengths" id="strengthsList"></ul>
+              </div>
+              <div id="feedbackImprovements" style="display:none;flex:1;min-width:180px">
+                <div class="feedback-section-title">🔧 개선할 점</div>
+                <ul class="feedback-list improvements" id="improvementsList"></ul>
+              </div>
+            </div>
+
+            <!-- 다음 단계 -->
+            <div class="feedback-section next-step-box" id="nextStepSection" style="display:none">
+              <div class="feedback-section-title">🚀 지금 바로 할 일</div>
+              <div class="feedback-body" id="nextStepText"></div>
             </div>
           </div>
         </div>
@@ -884,54 +928,70 @@
 
       /* ── AI 피드백 패널 ─────────────────────────────────────── */
       function showFeedbackPanel(fb) {
-        const panel = qs('#feedbackPanel');
-        panel.style.display = '';
+        qs('#feedbackPanel').style.display = '';
 
-        // 점수 링 애니메이션
-        const score       = Math.min(100, Math.max(0, fb.score || 0));
-        const circumference = 163.36;
-        const offset      = circumference - (score / 100) * circumference;
-        qs('#scoreArc').setAttribute('stroke-dashoffset', offset.toFixed(2));
-        qs('#scoreText').textContent = score;
-
-        // 색상: 0~49=빨, 50~74=노, 75~=초록
+        // ── 점수 링 애니메이션 ────────────────────────────────────────
+        const score = Math.min(100, Math.max(0, fb.score || 0));
         const color = score >= 75 ? '#16a34a' : score >= 50 ? '#d97706' : '#dc2626';
+        const offset = 163.36 - (score / 100) * 163.36;
+        qs('#scoreArc').setAttribute('stroke-dashoffset', offset.toFixed(2));
         qs('#scoreArc').setAttribute('stroke', color);
-        qs('#scoreText').style.color = color;
+        qs('#scoreText').textContent  = score;
+        qs('#scoreText').style.color  = color;
+        qs('#feedbackMeta').textContent = fb.fromCache ? '캐시된 피드백 (1시간 유지)' : '방금 생성된 AI 심층 분석';
 
-        qs('#feedbackText').textContent = fb.feedback || '';
-        qs('#feedbackMeta').textContent = fb.fromCache ? '캐시된 피드백' : '방금 생성된 피드백';
+        // ── 등급 배지 ─────────────────────────────────────────────────
+        const gradeInfo = {
+          S:['#7c3aed','#ede9fe','최상위'], A:['#1d4ed8','#dbeafe','우수'],
+          B:['#0369a1','#e0f2fe','보통'],  C:['#d97706','#fef3c7','기초'],
+          D:['#b45309','#ffedd5','부족'],  F:['#dc2626','#fee2e2','미흡'],
+        }[fb.grade || 'C'] || ['#6b7280','#f3f4f6','분석중'];
+        qs('#gradeBadge').innerHTML = `<span style="background:${gradeInfo[1]};color:${gradeInfo[0]};padding:3px 10px;border-radius:99px;font-size:0.78rem;font-weight:700">${fb.grade || '?'}등급 — ${gradeInfo[2]}</span>`;
 
-        const strBox = qs('#feedbackStrengths');
-        const impBox = qs('#feedbackImprovements');
-        const strList = qs('#strengthsList');
-        const impList = qs('#improvementsList');
+        // ── 종합 요약 ─────────────────────────────────────────────────
+        const summary = fb.summary || fb.feedback || '';
+        if (summary) {
+          qs('#summarySection').style.display = '';
+          qs('#summaryText').textContent = summary;
+        } else qs('#summarySection').style.display = 'none';
 
+        // ── 약점 / 관심 분야 태그 ────────────────────────────────────
+        const hasAnalysis = fb.weakAreas?.length || fb.interestAreas?.length;
+        qs('#feedbackAnalysis').style.display = hasAnalysis ? '' : 'none';
+        qs('#weakTags').innerHTML = (fb.weakAreas || [])
+          .map(w => `<span class="analysis-tag tag-weak">${escapeHtml(w)}</span>`).join('');
+        qs('#interestTags').innerHTML = (fb.interestAreas || [])
+          .map(i => `<span class="analysis-tag tag-interest">${escapeHtml(i)}</span>`).join('');
+
+        // ── 개념 이해도 분석 ──────────────────────────────────────────
+        if (fb.conceptAnalysis) {
+          qs('#conceptSection').style.display = '';
+          qs('#conceptText').textContent = fb.conceptAnalysis;
+        } else qs('#conceptSection').style.display = 'none';
+
+        // ── 학습 패턴 분석 ────────────────────────────────────────────
+        if (fb.learningPattern) {
+          qs('#patternSection').style.display = '';
+          qs('#patternText').textContent = fb.learningPattern;
+        } else qs('#patternSection').style.display = 'none';
+
+        // ── 잘한 점 ───────────────────────────────────────────────────
         if (fb.strengths?.length) {
-          strBox.style.display = '';
-          strList.innerHTML    = fb.strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('');
-        } else strBox.style.display = 'none';
+          qs('#feedbackStrengths').style.display = '';
+          qs('#strengthsList').innerHTML = fb.strengths.map(s=>`<li>${escapeHtml(s)}</li>`).join('');
+        } else qs('#feedbackStrengths').style.display = 'none';
 
+        // ── 개선할 점 ─────────────────────────────────────────────────
         if (fb.improvements?.length) {
-          impBox.style.display = '';
-          impList.innerHTML    = fb.improvements.map(i => `<li>${escapeHtml(i)}</li>`).join('');
-        } else impBox.style.display = 'none';
+          qs('#feedbackImprovements').style.display = '';
+          qs('#improvementsList').innerHTML = fb.improvements.map(i=>`<li>${escapeHtml(i)}</li>`).join('');
+        } else qs('#feedbackImprovements').style.display = 'none';
 
-        // 약점/관심사 태그
-        const analysisBox   = qs('#feedbackAnalysis');
-        const weakTags      = qs('#weakTags');
-        const interestTags  = qs('#interestTags');
-        const hasWeak       = fb.weakAreas?.length;
-        const hasInterest   = fb.interestAreas?.length;
-        if (hasWeak || hasInterest) {
-          analysisBox.style.display = '';
-          weakTags.innerHTML = (fb.weakAreas || [])
-            .map(w => `<span class="analysis-tag tag-weak">${escapeHtml(w)}</span>`).join('');
-          interestTags.innerHTML = (fb.interestAreas || [])
-            .map(i => `<span class="analysis-tag tag-interest">${escapeHtml(i)}</span>`).join('');
-        } else {
-          analysisBox.style.display = 'none';
-        }
+        // ── 다음 단계 ─────────────────────────────────────────────────
+        if (fb.nextStep) {
+          qs('#nextStepSection').style.display = '';
+          qs('#nextStepText').textContent = fb.nextStep;
+        } else qs('#nextStepSection').style.display = 'none';
       }
 
       function hideFeedbackPanel() {
@@ -1146,14 +1206,19 @@
         try {
           const data = await api(`/api/notes/${state.selectedNoteId}/feedback`, 'POST');
           const fb = {
-            feedback     : data.feedback,
-            strengths    : data.strengths    || [],
-            improvements : data.improvements || [],
-            weakAreas    : data.weakAreas    || [],
-            interestAreas: data.interestAreas|| [],
-            score        : data.score,
-            fromCache    : data.fromCache,
-            _ts          : Date.now(),
+            feedback       : data.feedback,
+            summary        : data.summary        || '',
+            conceptAnalysis: data.conceptAnalysis|| '',
+            learningPattern: data.learningPattern|| '',
+            nextStep       : data.nextStep       || '',
+            strengths      : data.strengths      || [],
+            improvements   : data.improvements   || [],
+            weakAreas      : data.weakAreas      || [],
+            interestAreas  : data.interestAreas  || [],
+            score          : data.score,
+            grade          : data.grade          || '',
+            fromCache      : data.fromCache,
+            _ts            : Date.now(),
           };
           state.feedbackCache[state.selectedNoteId] = fb;
           showFeedbackPanel(fb);
